@@ -40,5 +40,3 @@ class Periods
         return $periodicity;
     }
 }
-
-?>

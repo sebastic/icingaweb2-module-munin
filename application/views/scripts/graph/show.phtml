@@ -2,43 +2,39 @@
 <?php
 
 $title = $this->qlink(
-                       'Overview',
-                       'munin/graph/show',
-                       []
-                     );
+    'Overview',
+    'munin/graph/show',
+    []
+);
 
 $subtitle = '';
 
-if(basename(__FILE__) == 'problems.phtml') {
+if (basename(__FILE__) == 'problems.phtml') {
     $title .= ' :: Problem overview :: [';
-    foreach($this->problems as $problem) {
+    foreach ($this->problems as $problem) {
         $title .= " <a href=\"#". $this->escape($problem) ."\">";
         $title .= $this->escape($problem);
         $title .= "</a>";
     }
     $title .= ' ]';
-}
-elseif($this->group && in_array($this->group, $this->groups)) {
-    if(!$this->host && !$this->period) {
+} elseif ($this->group && in_array($this->group, $this->groups)) {
+    if (!$this->host && !$this->period) {
         $title .= ' :: '. $this->group;
-    }
-    else {
+    } else {
         $title .= ' :: '. $this->qlink(
-                                        $this->group,
-                                        'munin/graph/show',
-                                        [
-                                          'group' => $this->group,
-                                        ]
-                                      );
+            $this->group,
+            'munin/graph/show',
+            [
+              'group' => $this->group,
+            ]
+        );
 
-        if(
-            $this->period &&
+        if ($this->period &&
             array_key_exists($this->group, $this->group_categories) &&
             count($this->group_categories[$this->group]) > 0
-
         ) {
             $subtitle  = $this->group .' :: [';
-            foreach($this->group_categories[$this->group] as $category) {
+            foreach ($this->group_categories[$this->group] as $category) {
                 $subtitle .= " <a href=\"#". $this->escape($category) ."\">";
                 $subtitle .= $this->escape($category);
                 $subtitle .= "</a>";
@@ -47,61 +43,55 @@ elseif($this->group && in_array($this->group, $this->groups)) {
         }
     }
 
-    if(!$this->host) {
+    if (!$this->host) {
         $title .= ' :: [';
-        foreach($this->periods as $period) {
+        foreach ($this->periods as $period) {
             $title .= " ". $this->qlink(
-                                         $this->escape($period),
-                                         'munin/graph/show',
-                                         [
-                                           'group'  => $this->group,
-                                           'period' => $period,
-                                         ]
-                                       );
+                $this->escape($period),
+                'munin/graph/show',
+                [
+                  'group'  => $this->group,
+                  'period' => $period,
+                ]
+            );
         }
         $title .= " ]";
-    }
-    else {
-        if($this->plugin) {
+    } else {
+        if ($this->plugin) {
             $title .= ' :: '. $this->qlink(
-                                            $this->escape($this->host),
-                                            'munin/graph/show',
-                                            [
-                                              'group' => $this->group,
-                                              'host'  => $this->host,
-                                            ]
-                                          );
+                $this->escape($this->host),
+                'munin/graph/show',
+                [
+                  'group' => $this->group,
+                  'host'  => $this->host,
+                ]
+            );
             $title .= ' :: '. $this->plugin;
-        }
-        else {
+        } else {
             $title .= ' :: '. $this->host;
 
-            if(
-                array_key_exists($this->group, $this->host_categories) &&
+            if (array_key_exists($this->group, $this->host_categories) &&
                 array_key_exists($this->host, $this->host_categories[$this->group]) &&
                 count($this->host_categories[$this->group][$this->host]) > 0
             ) {
                 $subtitle  = $this->host .' :: [';
-                foreach($this->host_categories[$this->group][$this->host] as $category) {
+                foreach ($this->host_categories[$this->group][$this->host] as $category) {
                     $class = '';
-                    if(
-                        array_key_exists($this->group, $this->category_problems) &&
+                    if (array_key_exists($this->group, $this->category_problems) &&
                         array_key_exists($this->host, $this->category_problems[$this->group]) &&
                         array_key_exists($category, $this->category_problems[$this->group][$this->host])
                     ) {
-                        if(array_key_exists('critical', $this->category_problems[$this->group][$this->host][$category])) {
+                        if (array_key_exists('critical', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'crit';
-                        }
-                        elseif(array_key_exists('warning', $this->category_problems[$this->group][$this->host][$category])) {
+                        } elseif (array_key_exists('warning', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'warn';
-                        }
-                        elseif(array_key_exists('unknown', $this->category_problems[$this->group][$this->host][$category])) {
+                        } elseif (array_key_exists('unknown', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'unkn';
                         }
                     }
 
                     $subtitle .= " <a href=\"#". $this->escape($category) ."\"";
-                    if($class) {
+                    if ($class) {
                         $subtitle .= " class=\"$class\"";
                     }
                     $subtitle .= ">";
@@ -125,10 +115,9 @@ print "</div>";
 print "</td></tr>";
 print "<tr><td>";
 print "<div class=\"subtitle\">";
-if($subtitle) {
+if ($subtitle) {
     print $subtitle;
-}
-else {
+} else {
     print "&nbsp;";
 }
 print "</div>";
@@ -152,18 +141,18 @@ print "</h1>\n";
      <h2>Groups</h2>
 <?php
 
-if(count($this->groups) > 0) {
+if (count($this->groups) > 0) {
     print "     <ul>\n";
-    foreach($this->groups as $group) {
+    foreach ($this->groups as $group) {
         print "       <li>";
 
         print $this->qlink(
-                            $this->escape($group),
-                            'munin/graph/show',
-                            [
-                              'group' => $group,
-                            ]
-                          );
+            $this->escape($group),
+            'munin/graph/show',
+            [
+              'group' => $group,
+            ]
+        );
 
         print "</li>\n";
     }
@@ -175,31 +164,30 @@ if(count($this->groups) > 0) {
      <h2>Categories</h2>
 <?php
 
-if(count($this->categories) > 0) {
+if (count($this->categories) > 0) {
     print "     <ul>\n";
-    foreach($categories as $category) {
+    foreach ($categories as $category) {
         print "       <li>";
 
         print $this->qlink(
-                            $this->escape($category),
-                            'munin/graph/show',
-                            [
-                              'category' => $category,
-                              'period'   => $this->periods[0],
-                            ]
-                          );
+            $this->escape($category),
+            'munin/graph/show',
+            [
+              'category' => $category,
+              'period'   => $this->periods[0],
+            ]
+        );
 
         print " [";
-        foreach($this->periods as $period) {
+        foreach ($this->periods as $period) {
             print " ". $this->qlink(
-                                     substr($period, 0, 1),
-                                     'munin/graph/show',
-                                     [
-                                       'category' => $category,
-                                       'period'   => $period,
-                                     ]
-                                   );
-
+                substr($period, 0, 1),
+                'munin/graph/show',
+                [
+                  'category' => $category,
+                  'period'   => $period,
+                ]
+            );
         }
         print " ]";
 
@@ -213,24 +201,23 @@ if(count($this->categories) > 0) {
    <div id="content">
 <?php
 
-if(basename(__FILE__) == 'problems.phtml') {
-    foreach($this->problems as $problem) {
+if (basename(__FILE__) == 'problems.phtml') {
+    foreach ($this->problems as $problem) {
         print "<div id=\"$problem\" class=\"problem\">\n";
         print "<h3>". $this->problem_title[$problem] ."</h3>\n";
-        if(array_key_exists($problem, $this->problem_hosts)) {
+        if (array_key_exists($problem, $this->problem_hosts)) {
             ksort($this->problem_hosts[$problem]);
 
             print "<table>\n";
-            foreach($this->problem_hosts[$problem] as $group => $group_value) {
+            foreach ($this->problem_hosts[$problem] as $group => $group_value) {
                 ksort($group_value);
 
-                foreach($group_value as $host => $host_value) {
+                foreach ($group_value as $host => $host_value) {
                     sort($host_value);
 
-                    foreach($host_value as $plugin) {
+                    foreach ($host_value as $plugin) {
                         $title = $plugin;
-                        if(
-                            array_key_exists('_group', $this->data) &&
+                        if (array_key_exists('_group', $this->data) &&
                             array_key_exists($group, $this->data['_group']) &&
                             array_key_exists($host, $this->data['_group'][$group]) &&
                             array_key_exists('_plugin', $this->data['_group'][$group][$host]) &&
@@ -245,23 +232,23 @@ if(basename(__FILE__) == 'problems.phtml') {
                         print "<div class=\"node\">\n";
                         print "<span class=\"nodetitle\">";
                         print $this->qlink(
-                                            $this->escape($host),
-                                            'munin/graph/show',
-                                            [
-                                              'group' => $group,
-                                              'host'  => $host,
-                                            ]
-                                          );
+                            $this->escape($host),
+                            'munin/graph/show',
+                            [
+                              'group' => $group,
+                              'host'  => $host,
+                            ]
+                        );
                         print " :: ";
                         print $this->qlink(
-                                            $this->escape($title),
-                                            'munin/graph/show',
-                                            [
-                                              'group'  => $group,
-                                              'host'   => $host,
-                                              'plugin' => $plugin,
-                                            ]
-                                          );
+                            $this->escape($title),
+                            'munin/graph/show',
+                            [
+                              'group'  => $group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ]
+                        );
                         print "</span>\n";
 
                         print "<br/>\n";
@@ -285,23 +272,23 @@ if(basename(__FILE__) == 'problems.phtml') {
                         print "<div class=\"node\">\n";
                         print "<span class=\"nodetitle\">";
                         print $this->qlink(
-                                            $this->escape($host),
-                                            'munin/graph/show',
-                                            [
-                                              'group' => $group,
-                                              'host'  => $host,
-                                            ]
-                                          );
+                            $this->escape($host),
+                            'munin/graph/show',
+                            [
+                              'group' => $group,
+                              'host'  => $host,
+                            ]
+                        );
                         print " :: ";
                         print $this->qlink(
-                                            $this->escape($title),
-                                            'munin/graph/show',
-                                            [
-                                              'group'  => $group,
-                                              'host'   => $host,
-                                              'plugin' => $plugin,
-                                            ]
-                                          );
+                            $this->escape($title),
+                            'munin/graph/show',
+                            [
+                              'group'  => $group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ]
+                        );
                         print "</span>\n";
 
                         print "<br/>\n";
@@ -328,26 +315,23 @@ if(basename(__FILE__) == 'problems.phtml') {
         }
         print "</div>\n";
     }
-}
-elseif($this->category && $this->period) {
-    if(
-        array_key_exists('_group', $this->data) &&
+} elseif ($this->category && $this->period) {
+    if (array_key_exists('_group', $this->data) &&
         count($this->data['_group']) > 0
     ) {
         ksort($this->data['_group']);
 
         $plugins = [];
 
-        foreach($this->data['_group'] as $group => $group_value) {
-            foreach($group_value as $host => $host_value) {
-                if(
-                    array_key_exists('_category', $host_value) &&
+        foreach ($this->data['_group'] as $group => $group_value) {
+            foreach ($group_value as $host => $host_value) {
+                if (array_key_exists('_category', $host_value) &&
                     array_key_exists($this->category, $host_value['_category']) &&
                     count($host_value['_category'][$this->category]) > 0
                 ) {
-                    foreach($host_value['_category'][$this->category] as $plugin => $plugin_value)  {
+                    foreach ($host_value['_category'][$this->category] as $plugin => $plugin_value) {
                         $title = $plugin;
-                        if(array_key_exists('graph_title', $plugin_value)) {
+                        if (array_key_exists('graph_title', $plugin_value)) {
                             $title = $plugin_value['graph_title'];
                         }
 
@@ -359,16 +343,15 @@ elseif($this->category && $this->period) {
 
         asort($plugins);
 
-        if(count($plugins) > 0) {
-            foreach($plugins as $plugin => $title) {
+        if (count($plugins) > 0) {
+            foreach ($plugins as $plugin => $title) {
                 print "<h3>$title</h3>\n";
 
-                foreach($this->data['_group'] as $group => $group_value) {
+                foreach ($this->data['_group'] as $group => $group_value) {
                     ksort($group_value);
 
-                    foreach($group_value as $host => $host_value) {
-                        if(
-                            array_key_exists('_plugin', $host_value) &&
+                    foreach ($group_value as $host => $host_value) {
+                        if (array_key_exists('_plugin', $host_value) &&
                             array_key_exists($plugin, $host_value['_plugin']) &&
                             count($host_value['_plugin'][$plugin]) > 0
                         ) {
@@ -376,25 +359,25 @@ elseif($this->category && $this->period) {
                             print "<span class=\"nodetitle\">";
 
                             print $this->qlink(
-                                                $this->escape($host),
-                                                'munin/graph/show',
-                                                [
-                                                  'group' => $group,
-                                                  'host'  => $host,
-                                                ]
-                                              );
+                                $this->escape($host),
+                                'munin/graph/show',
+                                [
+                                  'group' => $group,
+                                  'host'  => $host,
+                                ]
+                            );
 
                             print " :: ";
 
                             print $this->qlink(
-                                                $this->escape($title),
-                                                'munin/graph/show',
-                                                [
-                                                  'group'  => $group,
-                                                  'host'   => $host,
-                                                  'plugin' => $plugin,
-                                                ]
-                                              );
+                                $this->escape($title),
+                                'munin/graph/show',
+                                [
+                                  'group'  => $group,
+                                  'host'   => $host,
+                                  'plugin' => $plugin,
+                                ]
+                            );
 
                             print "</span>\n";
 
@@ -420,10 +403,8 @@ elseif($this->category && $this->period) {
             }
         }
     }
-}
-elseif($this->group && $this->host && $this->plugin) {
-    if(
-        array_key_exists('_group', $this->data) &&
+} elseif ($this->group && $this->host && $this->plugin) {
+    if (array_key_exists('_group', $this->data) &&
         array_key_exists($this->group, $this->data['_group']) &&
         array_key_exists($this->host, $this->data['_group'][$this->group]) &&
         array_key_exists('_plugin', $this->data['_group'][$this->group][$this->host]) &&
@@ -442,8 +423,8 @@ elseif($this->group && $this->host && $this->plugin) {
         print "<table>\n";
 
         $i = 0;
-        foreach($this->periods as $period) {
-            if($i == 0) {
+        foreach ($this->periods as $period) {
+            if ($i == 0) {
                 print "<tr>";
             }
 
@@ -452,18 +433,15 @@ elseif($this->group && $this->host && $this->plugin) {
             $url .= '&stop_epoch='.   time();
 
             $class = '';
-            if(
-                array_key_exists($this->group, $this->host_problems) &&
+            if (array_key_exists($this->group, $this->host_problems) &&
                 array_key_exists($this->host, $this->host_problems[$this->group]) &&
                 array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host])
             ) {
-                if(array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
                     $class = 'crit';
-                }
-                elseif(array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
                     $class = 'warn';
-                }
-                elseif(array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$this->plugin])) {
                     $class = 'unkn';
                 }
             }
@@ -480,7 +458,7 @@ elseif($this->group && $this->host && $this->plugin) {
 
             print "<td>";
             print "<a href=\"$url\"";
-            if($class) {
+            if ($class) {
                 print " class=\"$class\"";
             }
             print " target=\"_blank\">";
@@ -490,7 +468,7 @@ elseif($this->group && $this->host && $this->plugin) {
 
             $i++;
 
-            if($i == 2) {
+            if ($i == 2) {
                 print "</tr>\n";
 
                 $i = 0;
@@ -499,20 +477,18 @@ elseif($this->group && $this->host && $this->plugin) {
 
         print "</table>\n";
 
-        if(
-            array_key_exists($this->group, $this->host_problems) &&
+        if (array_key_exists($this->group, $this->host_problems) &&
             array_key_exists($this->host, $this->host_problems[$this->group]) &&
             array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host])
         ) {
-            if(array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+            if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
                 print "<p/>\n";
                 print "<p>";
                 print "<strong>Note:</strong>";
                 print " This service is in CRITICAL state because one of the values reported is outside the allowed range.";
                 print " Please see further down for information about the ranges and the graph for the values.";
                 print "</p>\n";
-            }
-            elseif(array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
                 print "<p/>\n";
                 print "<p>";
                 print "<strong>Note:</strong>";
@@ -539,69 +515,68 @@ elseif($this->group && $this->host && $this->plugin) {
 
         ksort($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]);
 
-        foreach($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin] as $key => $value) {
-            if(preg_match('/^(\S+)\.(critical|graph|info|label|type|warning)$/', $key, $matches)) {
-                if(!array_key_exists($matches[1], $datasources)) {
+        foreach ($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin] as $key => $value) {
+            if (preg_match('/^(\S+)\.(critical|graph|info|label|type|warning)$/', $key, $matches)) {
+                if (!array_key_exists($matches[1], $datasources)) {
                     $datasources[$matches[1]] = [];
                 }
 
                 $datasources[$matches[1]][$matches[2]] = $value;
             }
-	}
+        }
 
         ksort($datasources);
 
         $order = array_keys($datasources);
-        if(array_key_exists('graph_order', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin])) {
+        if (array_key_exists('graph_order', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin])) {
             $order = explode(' ', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]['graph_order']);
         }
 
         $i = 1;
-        foreach($order as $datasource) {
+        foreach ($order as $datasource) {
             $datasource_value = $datasources[$datasource];
 
             $graph = 'yes';
-            if(array_key_exists('graph', $datasource_value)) {
+            if (array_key_exists('graph', $datasource_value)) {
                 $graph = $datasource_value['graph'];
             }
 
-            if($graph == 'no') {
+            if ($graph == 'no') {
                 continue;
             }
 
             $label = $datasource;
-            if(array_key_exists('label', $datasource_value)) {
+            if (array_key_exists('label', $datasource_value)) {
                 $label = $datasource_value['label'];
             }
 
             $type = 'gauge';
-            if(array_key_exists('type', $datasource_value)) {
+            if (array_key_exists('type', $datasource_value)) {
                 $type = $datasource_value['type'];
             }
 
             $warning = '&nbsp;';
-            if(array_key_exists('warning', $datasource_value)) {
+            if (array_key_exists('warning', $datasource_value)) {
                 $warning = $datasource_value['warning'];
             }
 
             $critical = '&nbsp;';
-            if(array_key_exists('critical', $datasource_value)) {
+            if (array_key_exists('critical', $datasource_value)) {
                 $critical = $datasource_value['critical'];
             }
 
             $info = '&nbsp;';
-            if(array_key_exists('info', $datasource_value)) {
+            if (array_key_exists('info', $datasource_value)) {
                 $info = $datasource_value['info'];
             }
 
             $class = 'oddrow';
-            if($i == 2) {
+            if ($i == 2) {
                 $class = 'evenrow';
             }
 
             $state = 'ok';
-            if(
-                array_key_exists('_group', $this->limits) &&
+            if (array_key_exists('_group', $this->limits) &&
                 array_key_exists($this->group, $this->limits['_group']) &&
                 array_key_exists($this->host, $this->limits['_group'][$this->group]) &&
                 array_key_exists($this->plugin, $this->limits['_group'][$this->group][$this->host]) &&
@@ -617,18 +592,16 @@ elseif($this->group && $this->host && $this->plugin) {
             print "<td class=\"internal\"><span title=\"For use in munin.conf\">$datasource</span></td>";
             print "<td class=\"type\">$type</td>";
             print "<td class=\"warn\">";
-            if($state == 'warning') {
+            if ($state == 'warning') {
                 print "<div class=\"warntext\">$warning</div>";
-            }
-            else {
+            } else {
                 print "$warning";
             }
             print "</td>";
             print "<td class=\"crit\">";
-            if($state == 'critical') {
+            if ($state == 'critical') {
                 print "<div class=\"crittext\">$critical</div>";
-            }
-            else {
+            } else {
                 print "$critical";
             }
             print "</td>";
@@ -637,17 +610,15 @@ elseif($this->group && $this->host && $this->plugin) {
 
             $i++;
 
-            if($i > 2) {
+            if ($i > 2) {
                 $i = 1;
             }
         }
 
         print "</table>\n";
     }
-}
-elseif($this->group && $this->host) {
-    if(
-        array_key_exists('_group', $this->data) &&
+} elseif ($this->group && $this->host) {
+    if (array_key_exists('_group', $this->data) &&
         array_key_exists($this->group, $this->data['_group']) &&
         array_key_exists($this->host, $this->data['_group'][$this->group]) &&
         array_key_exists('_category', $this->data['_group'][$this->group][$this->host]) &&
@@ -655,12 +626,12 @@ elseif($this->group && $this->host) {
     ) {
         ksort($this->data['_group'][$this->group][$this->host]['_category']);
 
-        foreach($this->data['_group'][$this->group][$this->host]['_category'] as $category => $category_value) {
+        foreach ($this->data['_group'][$this->group][$this->host]['_category'] as $category => $category_value) {
             $plugins = [];
 
-            foreach($category_value as $plugin => $plugin_value) {
+            foreach ($category_value as $plugin => $plugin_value) {
                 $title = $plugin;
-                if(array_key_exists('graph_title', $plugin_value)) {
+                if (array_key_exists('graph_title', $plugin_value)) {
                     $title = $plugin_value['graph_title'];
                 }
 
@@ -671,7 +642,7 @@ elseif($this->group && $this->host) {
 
             print "<h3 id=\"$category\">$category</h3>\n";
             print "<table>\n";
-            foreach($plugins as $plugin => $title) {
+            foreach ($plugins as $plugin => $title) {
                 print "<tr><td colspan=\"2\">$title</td></tr>\n";
                 print "<tr><td>";
 
@@ -681,18 +652,15 @@ elseif($this->group && $this->host) {
                 $url .= '&plugin='. $this->escape($plugin);
 
                 $class = '';
-                if(
-                    array_key_exists($this->group, $this->host_problems) &&
+                if (array_key_exists($this->group, $this->host_problems) &&
                     array_key_exists($this->host, $this->host_problems[$this->group]) &&
                     array_key_exists($plugin, $this->host_problems[$this->group][$this->host])
                 ) {
-                    if(array_key_exists('critical', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'crit';
-                    }
-                    elseif(array_key_exists('warning', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'warn';
-                    }
-                    elseif(array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'unkn';
                     }
                 }
@@ -705,7 +673,7 @@ elseif($this->group && $this->host) {
                 $img .= '-day.png';
 
                 print "<a href=\"$url\"";
-                if($class) {
+                if ($class) {
                     print " class=\"$class\"";
                 }
                 print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
@@ -718,7 +686,7 @@ elseif($this->group && $this->host) {
                 $img .= '-week.png';
 
                 print "<a href=\"$url\"";
-                if($class) {
+                if ($class) {
                     print " class=\"$class\"";
                 }
                 print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
@@ -727,10 +695,8 @@ elseif($this->group && $this->host) {
             print "</table>\n";
         }
     }
-}
-elseif($this->group && $this->period) {
-    if(
-        in_array($this->period, $this->periods) &&
+} elseif ($this->group && $this->period) {
+    if (in_array($this->period, $this->periods) &&
         array_key_exists('_group', $this->data) &&
         array_key_exists($this->group, $this->data['_group']) &&
         count($this->data['_group'][$this->group]) > 0
@@ -739,10 +705,10 @@ elseif($this->group && $this->period) {
 
         $categories = [];
 
-        foreach($this->data['_group'][$this->group] as $host => $host_value) {
-            if(array_key_exists('_category', $host_value)) {
-                foreach($host_value['_category'] as $category => $category_value) {
-                    if(!in_array($category, $categories)) {
+        foreach ($this->data['_group'][$this->group] as $host => $host_value) {
+            if (array_key_exists('_category', $host_value)) {
+                foreach ($host_value['_category'] as $category => $category_value) {
+                    if (!in_array($category, $categories)) {
                         array_push($categories, $category);
                     }
                 }
@@ -751,21 +717,20 @@ elseif($this->group && $this->period) {
 
         sort($categories);
 
-        foreach($categories as $category) {
+        foreach ($categories as $category) {
             print "<h3 id=\"$category\">$category</h3>\n";
 
             $plugins = [];
 
-            foreach($this->data['_group'][$this->group] as $host => $host_value) {
-                if(
-                    array_key_exists('_category', $host_value) &&
+            foreach ($this->data['_group'][$this->group] as $host => $host_value) {
+                if (array_key_exists('_category', $host_value) &&
                     array_key_exists($category, $host_value['_category']) &&
                     count($host_value['_category'][$category]) > 0
                 ) {
-                    foreach($host_value['_category'][$category] as $plugin => $plugin_value) {
-                        if(!in_array($plugin, $plugins)) {
+                    foreach ($host_value['_category'][$category] as $plugin => $plugin_value) {
+                        if (!in_array($plugin, $plugins)) {
                             $title = $plugin;
-                            if(array_key_exists('graph_title', $plugin_value)) {
+                            if (array_key_exists('graph_title', $plugin_value)) {
                                 $title = $plugin_value['graph_title'];
                             }
 
@@ -778,64 +743,60 @@ elseif($this->group && $this->period) {
             asort($plugins);
 
             print "<table class=\"comparison\">\n";
-            foreach($plugins as $plugin => $title) {
+            foreach ($plugins as $plugin => $title) {
                 print "<tr>";
 
-                foreach($this->data['_group'][$this->group] as $host => $host_value) {
+                foreach ($this->data['_group'][$this->group] as $host => $host_value) {
                     ksort($host_value);
 
                     print "<td>";
                     print "<div class=\"node\">";
 
                     print $this->qlink(
-                                        $this->escape($host),
-                                        'munin/graph/show',
-                                        [
-                                          'group' => $this->group,
-                                          'host'  => $host,
-                                        ]
-                                      );
+                        $this->escape($host),
+                        'munin/graph/show',
+                        [
+                          'group' => $this->group,
+                          'host'  => $host,
+                        ]
+                    );
 
-                    if(
-                        array_key_exists('_plugin', $host_value) &&
+                    if (array_key_exists('_plugin', $host_value) &&
                         array_key_exists($plugin, $host_value['_plugin']) &&
                         count($host_value['_plugin'][$plugin]) > 0
                     ) {
                         $class = '';
-                        if(
-                            array_key_exists($this->group, $this->host_problems) &&
+                        if (array_key_exists($this->group, $this->host_problems) &&
                             array_key_exists($host, $this->host_problems[$this->group]) &&
                             array_key_exists($plugin, $this->host_problems[$this->group][$host])
                         ) {
-                            if(array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
+                            if (array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
                                 $class = 'crit';
-                            }
-                            elseif(array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
+                            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
                                 $class = 'warn';
-                            }
-                            elseif(array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
+                            } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
                                 $class = 'unkn';
                             }
                         }
                         $i_class = 'i'. $class;
 
                         $attrs = [];
-                        if($class) {
+                        if ($class) {
                             $attrs['class'] = $class;
                         }
 
                         print " :: ";
 
                         print $this->qlink(
-                                            $this->escape($title),
-                                            'munin/graph/show',
-                                            [
-                                              'group'  => $this->group,
-                                              'host'   => $host,
-                                              'plugin' => $plugin,
-                                            ],
-                                            $attrs
-                                          );
+                            $this->escape($title),
+                            'munin/graph/show',
+                            [
+                              'group'  => $this->group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ],
+                            $attrs
+                        );
 
                         print "<br/>\n";
 
@@ -851,7 +812,7 @@ elseif($this->group && $this->period) {
                         $img .= '-'. $this->escape($this->period) .'.png';
 
                         print "<a href=\"$url\"";
-                        if($class) {
+                        if ($class) {
                             print " class=\"$class\"";
                         }
                         print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
@@ -866,10 +827,8 @@ elseif($this->group && $this->period) {
             print "</table>\n";
         }
     }
-}
-elseif($this->group) {
-    if(
-        array_key_exists('_group', $this->data) &&
+} elseif ($this->group) {
+    if (array_key_exists('_group', $this->data) &&
         count($this->data['_group']) > 0 &&
         array_key_exists($this->group, $this->data['_group']) &&
         count($this->data['_group'][$this->group]) > 0
@@ -877,25 +836,25 @@ elseif($this->group) {
         ksort($this->data['_group'][$this->group]);
 
         print "  <ul>\n";
-        foreach($this->data['_group'][$this->group] as $host => $host_value) {
+        foreach ($this->data['_group'][$this->group] as $host => $host_value) {
             ksort($host_value['_category']);
 
             print "    <li>";
             print $this->qlink(
-                                $this->escape($host),
-                                'munin/graph/show',
-                                [
-                                  'group' => $this->group,
-                                  'host'  => $host,
-                                ]
-                              );
+                $this->escape($host),
+                'munin/graph/show',
+                [
+                  'group' => $this->group,
+                  'host'  => $host,
+                ]
+            );
             print "      <ul>\n";
-            foreach($host_value['_category'] as $category => $category_value) {
+            foreach ($host_value['_category'] as $category => $category_value) {
                 $plugins = [];
 
-                foreach($category_value as $plugin => $plugin_value) {
+                foreach ($category_value as $plugin => $plugin_value) {
                     $title = $plugin;
-                    if(array_key_exists('graph_title', $plugin_value)) {
+                    if (array_key_exists('graph_title', $plugin_value)) {
                         $title = $plugin_value['graph_title'];
                     }
 
@@ -912,35 +871,32 @@ elseif($this->group) {
                 print "        <li>";
                 print "<a href=\"$url\">$category</a>";
                 print "          <ul>\n";
-                foreach($plugins as $plugin => $title) {
+                foreach ($plugins as $plugin => $title) {
                     $attrs = [];
-                    if(
-                        array_key_exists($this->group, $this->host_problems) &&
+                    if (array_key_exists($this->group, $this->host_problems) &&
                         array_key_exists($host, $this->host_problems[$this->group]) &&
                         array_key_exists($plugin, $this->host_problems[$this->group][$host])
                     ) {
-                        if(array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
+                        if (array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'crit';
-                        }
-                        elseif(array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
+                        } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'warn';
-                        }
-                        elseif(array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
+                        } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'unkn';
                         }
                     }
 
                     print "            <li>";
                     print $this->qlink(
-                                        $this->escape($title),
-                                        'munin/graph/show',
-                                        [
-                                          'group'  => $this->group,
-                                          'host'   => $host,
-                                          'plugin' => $plugin,
-                                        ],
-                                        $attrs
-                                      );
+                        $this->escape($title),
+                        'munin/graph/show',
+                        [
+                          'group'  => $this->group,
+                          'host'   => $host,
+                          'plugin' => $plugin,
+                        ],
+                        $attrs
+                    );
                     print "            </li>\n";
                 }
                 print "          </ul>\n";
@@ -951,76 +907,71 @@ elseif($this->group) {
         }
         print "  </ul>\n";
     }
-}
-elseif(
-        array_key_exists('_group', $this->data) &&
-        count($this->data['_group']) > 0
+} elseif (array_key_exists('_group', $this->data) &&
+          count($this->data['_group']) > 0
 ) {
     ksort($this->data['_group']);
 
-    foreach($this->data['_group'] as $group => $group_value) {
+    foreach ($this->data['_group'] as $group => $group_value) {
         ksort($group_value);
 
         print "  <ul>\n";
         print "    <li>";
         print $this->qlink(
-                            $this->escape($group),
-                            'munin/graph/show',
-                            [
-                              'group' => $group,
-                            ]
-                          );
+            $this->escape($group),
+            'munin/graph/show',
+            [
+              'group' => $group,
+            ]
+        );
         print " :: [";
-        foreach($this->periods as $period) {
+        foreach ($this->periods as $period) {
             print " ". $this->qlink(
-                                     $this->escape($period),
-                                     'munin/graph/show',
-                                     [
-                                       'group'  => $group,
-                                       'period' => $period,
-                                     ]
-                                   );
+                $this->escape($period),
+                'munin/graph/show',
+                [
+                  'group'  => $group,
+                  'period' => $period,
+                ]
+            );
         }
         print " ]\n";
         print "      <ul>\n";
-        foreach($group_value as $host => $host_value) {
+        foreach ($group_value as $host => $host_value) {
             ksort($host_value['_category']);
 
             print "        <li>";
             print $this->qlink(
-                                $this->escape($host),
-                                'munin/graph/show',
-                                [
-                                  'group' => $group,
-                                  'host'  => $host,
-                                ]
-                              );
+                $this->escape($host),
+                'munin/graph/show',
+                [
+                  'group' => $group,
+                  'host'  => $host,
+                ]
+            );
             print " :: [";
-            foreach($host_value['_category'] as $category => $category_value) {
+            foreach ($host_value['_category'] as $category => $category_value) {
                 $url  = 'show';
                 $url .= '?group='. $this->escape($group);
                 $url .= '&host='.  $this->escape($host);
                 $url .= '#'.       $this->escape($category);
 
                 $class = '';
-                if(
-                    array_key_exists($group, $this->category_problems) &&
+                if (array_key_exists($group, $this->category_problems) &&
                     array_key_exists($host, $this->category_problems[$group]) &&
                     array_key_exists($category, $this->category_problems[$group][$host])
                 ) {
-                    if(array_key_exists('critical', $this->category_problems[$group][$host][$category])) {
+                    if (array_key_exists('critical', $this->category_problems[$group][$host][$category])) {
                         $class = 'crit';
-                    }
-                    elseif(array_key_exists('warning', $this->category_problems[$group][$host][$category])) {
+                    } elseif (array_key_exists('warning', $this->category_problems[$group][$host][$category])) {
                         $class = 'warn';
-                    }
-                    elseif(array_key_exists('unknown', $this->category_problems[$group][$host][$category])) {
+                    } elseif (array_key_exists('unknown', $this->category_problems[$group][$host][$category])) {
                         $class = 'unkn';
                     }
                 }
 
                 print " <a href=\"$url\"";
-                if($class) {
+                if ($class) {
                     print " class=\"$class\"";
                 }
                 print ">$category</a>";
@@ -1034,7 +985,7 @@ elseif(
     }
 }
 
-if($this->debug) {
+if ($this->debug) {
     print "Data:\n";
     print "<pre>";
     var_dump($this->data);

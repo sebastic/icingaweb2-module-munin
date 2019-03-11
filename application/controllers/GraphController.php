@@ -34,10 +34,9 @@ class GraphController extends Controller
         $cgiurl_graph = $this->config->get('global', 'cgiurl_graph', '/munin-cgi/munin-cgi-graph');
         $this->view->cgiurl_graph = $cgiurl_graph;
 
-        if($graph_strategy == 'cgi') {
+        if ($graph_strategy == 'cgi') {
             $this->view->graph_baseurl = $cgiurl_graph;
-        }
-        else {
+        } else {
             $this->view->graph_baseurl = $munin_baseurl;
         }
 

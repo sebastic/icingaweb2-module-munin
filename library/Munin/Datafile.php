@@ -10,23 +10,23 @@ class Datafile
     {
         $data = [];
 
-        if(is_file($file) && is_readable($file)) {
+        if (is_file($file) && is_readable($file)) {
             $content = file_get_contents($file);
 
-            if($content === FALSE) {
+            if ($content === false) {
                 Logger::error("Failed to read datafile: $file");
-            }
-            else {
-                foreach(preg_split('/\r?\n/', $content) as $line) {
-                    # version 2.0.33-1
-                    if(preg_match('/^(version)\s+(\S+.*?\S+)\s*$/', $line, $matches)) {
+            } else {
+                foreach (preg_split('/\r?\n/', $content) as $line) {
+                    if (preg_match('/^(version)\s+(\S+.*?\S+)\s*$/', $line, $matches)) {
+                        # version 2.0.33-1
+
                         $key   = $matches[1];
                         $value = $matches[2];
 
                         $data[$key] = $value;
-                    }
-                    # example.com;host.example.com:load.graph_title Load average
-                    elseif(preg_match('/^(\S+?);(\S+):(\S+?)\.(\S+)\s+(\S+.*?)\s*$/', $line, $matches)) {
+                    } elseif (preg_match('/^(\S+?);(\S+):(\S+?)\.(\S+)\s+(\S+.*?)\s*$/', $line, $matches)) {
+                        # example.com;host.example.com:load.graph_title Load average
+
                         $group  = $matches[1];
                         $host   = $matches[2];
                         $plugin = $matches[3];
@@ -35,21 +35,20 @@ class Datafile
 
                         $data['_group'][$group][$host]['_plugin'][$plugin][$key] = $value;
 
-                        if(!array_key_exists('graph_category', $data['_group'][$group][$host]['_plugin'][$plugin])) {
+                        if (!array_key_exists('graph_category', $data['_group'][$group][$host]['_plugin'][$plugin])) {
                             $data['_group'][$group][$host]['_plugin'][$plugin]['graph_category'] = 'other';
                         }
-                    }
-                    else {
+                    } else {
                         Logger::warning("Cannot parse line: $line");
                     }
                 }
 
-                if(array_key_exists('_group', $data)) {
-                    foreach($data['_group'] as $group => $group_value) {
-                        foreach($group_value as $host => $host_value) {
-                            foreach($host_value as $_plugin => $_plugin_value) {
-                                foreach($_plugin_value as $plugin => $plugin_value) {
-                                    if(array_key_exists('graph_category', $plugin_value)) {
+                if (array_key_exists('_group', $data)) {
+                    foreach ($data['_group'] as $group => $group_value) {
+                        foreach ($group_value as $host => $host_value) {
+                            foreach ($host_value as $_plugin => $_plugin_value) {
+                                foreach ($_plugin_value as $plugin => $plugin_value) {
+                                    if (array_key_exists('graph_category', $plugin_value)) {
                                         $category = mb_strtolower($plugin_value['graph_category']);
 
                                         $data['_group'][$group][$host]['_category'][$category][$plugin] = $data['_group'][$group][$host]['_plugin'][$plugin];
@@ -60,8 +59,7 @@ class Datafile
                     }
                 }
             }
-        }
-        else {
+        } else {
             Logger::error("Cannot read datafile: $file");
         }
 
@@ -72,8 +70,7 @@ class Datafile
     {
         $groups = [];
 
-        if(
-            array_key_exists('_group', $data) &&
+        if (array_key_exists('_group', $data) &&
             count($data['_group']) > 0
         ) {
             $groups = array_keys($data['_group']);
@@ -88,18 +85,16 @@ class Datafile
     {
         $categories = [];
 
-        if(
-            array_key_exists('_group', $data) &&
+        if (array_key_exists('_group', $data) &&
             count($data['_group']) > 0
         ) {
-            foreach($data['_group'] as $group => $group_value) {
-                foreach($group_value as $host => $host_value) {
-                    if(
-                        array_key_exists('_category', $host_value) &&
+            foreach ($data['_group'] as $group => $group_value) {
+                foreach ($group_value as $host => $host_value) {
+                    if (array_key_exists('_category', $host_value) &&
                         count($host_value['_category']) > 0
                     ) {
-                        foreach($host_value['_category'] as $category => $category_value)  {
-                            if(!in_array($category, $categories)) {
+                        foreach ($host_value['_category'] as $category => $category_value) {
+                            if (!in_array($category, $categories)) {
                                 array_push($categories, $category);
                             }
                         }
@@ -117,17 +112,16 @@ class Datafile
     {
         $group_categories = [];
 
-        if(
-            array_key_exists('_group', $data) &&
+        if (array_key_exists('_group', $data) &&
             count($data['_group']) > 0
         ) {
-            foreach($data['_group'] as $group => $group_value) {
+            foreach ($data['_group'] as $group => $group_value) {
                 $categories = [];
 
-                foreach($data['_group'][$group] as $host => $host_value) {
-                    if(array_key_exists('_category', $host_value)) {
-                        foreach($host_value['_category'] as $category => $category_value) {
-                            if(!in_array($category, $categories)) {
+                foreach ($data['_group'][$group] as $host => $host_value) {
+                    if (array_key_exists('_category', $host_value)) {
+                        foreach ($host_value['_category'] as $category => $category_value) {
+                            if (!in_array($category, $categories)) {
                                 array_push($categories, $category);
                             }
                         }
@@ -149,17 +143,16 @@ class Datafile
     {
         $host_categories = [];
 
-        if(
-            array_key_exists('_group', $data) &&
+        if (array_key_exists('_group', $data) &&
             count($data['_group']) > 0
         ) {
-            foreach($data['_group'] as $group => $group_value) {
-                foreach($data['_group'][$group] as $host => $host_value) {
+            foreach ($data['_group'] as $group => $group_value) {
+                foreach ($data['_group'][$group] as $host => $host_value) {
                     $categories = [];
 
-                    if(array_key_exists('_category', $host_value)) {
-                        foreach($host_value['_category'] as $category => $category_value) {
-                            if(!in_array($category, $categories)) {
+                    if (array_key_exists('_category', $host_value)) {
+                        foreach ($host_value['_category'] as $category => $category_value) {
+                            if (!in_array($category, $categories)) {
                                 array_push($categories, $category);
                             }
                         }
@@ -167,7 +160,7 @@ class Datafile
 
                     sort($categories);
 
-                    if(!array_key_exists($group, $host_categories)) {
+                    if (!array_key_exists($group, $host_categories)) {
                         $host_categories[$group] = [];
                     }
 
@@ -183,5 +176,3 @@ class Datafile
         return $host_categories;
     }
 }
-
-?>
