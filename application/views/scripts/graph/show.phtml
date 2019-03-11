@@ -47,7 +47,7 @@ elseif($this->group && in_array($this->group, $this->groups)) {
         }
     }
 
-    if(!$host) {
+    if(!$this->host) {
         $title .= ' :: [';
         foreach($this->periods as $period) {
             $title .= " ". $this->qlink(
@@ -62,40 +62,40 @@ elseif($this->group && in_array($this->group, $this->groups)) {
         $title .= " ]";
     }
     else {
-        if($plugin) {
+        if($this->plugin) {
             $title .= ' :: '. $this->qlink(
-                                            $host,
+                                            $this->escape($this->host),
                                             'munin/graph/show',
                                             [
                                               'group' => $this->group,
-                                              'host'  => $host,
+                                              'host'  => $this->host,
                                             ]
                                           );
-            $title .= ' :: '. $plugin;
+            $title .= ' :: '. $this->plugin;
         }
         else {
-            $title .= ' :: '. $host;
+            $title .= ' :: '. $this->host;
 
             if(
                 array_key_exists($this->group, $this->host_categories) &&
-                array_key_exists($host, $this->host_categories[$this->group]) &&
-                count($this->host_categories[$this->group][$host]) > 0
+                array_key_exists($this->host, $this->host_categories[$this->group]) &&
+                count($this->host_categories[$this->group][$this->host]) > 0
             ) {
-                $subtitle  = $host .' :: [';
-                foreach($this->host_categories[$this->group][$host] as $category) {
+                $subtitle  = $this->host .' :: [';
+                foreach($this->host_categories[$this->group][$this->host] as $category) {
                     $class = '';
                     if(
-                        array_key_exists($group, $this->category_problems) &&
-                        array_key_exists($host, $this->category_problems[$group]) &&
-                        array_key_exists($category, $this->category_problems[$group][$host])
+                        array_key_exists($this->group, $this->category_problems) &&
+                        array_key_exists($this->host, $this->category_problems[$this->group]) &&
+                        array_key_exists($category, $this->category_problems[$this->group][$this->host])
                     ) {
-                        if(array_key_exists('critical', $this->category_problems[$group][$host][$category])) {
+                        if(array_key_exists('critical', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'crit';
                         }
-                        elseif(array_key_exists('warning', $this->category_problems[$group][$host][$category])) {
+                        elseif(array_key_exists('warning', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'warn';
                         }
-                        elseif(array_key_exists('unknown', $this->category_problems[$group][$host][$category])) {
+                        elseif(array_key_exists('unknown', $this->category_problems[$this->group][$this->host][$category])) {
                             $class = 'unkn';
                         }
                     }
@@ -682,17 +682,17 @@ elseif($this->group && $this->host) {
 
                 $class = '';
                 if(
-                    array_key_exists($group, $this->host_problems) &&
-                    array_key_exists($host, $this->host_problems[$group]) &&
-                    array_key_exists($plugin, $this->host_problems[$group][$host])
+                    array_key_exists($this->group, $this->host_problems) &&
+                    array_key_exists($this->host, $this->host_problems[$this->group]) &&
+                    array_key_exists($plugin, $this->host_problems[$this->group][$this->host])
                 ) {
-                    if(array_key_exists('critical', $this->host_problems[$group][$host][$plugin])) {
+                    if(array_key_exists('critical', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'crit';
                     }
-                    elseif(array_key_exists('warning', $this->host_problems[$group][$host][$plugin])) {
+                    elseif(array_key_exists('warning', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'warn';
                     }
-                    elseif(array_key_exists('unknown', $this->host_problems[$group][$host][$plugin])) {
+                    elseif(array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$plugin])) {
                         $class = 'unkn';
                     }
                 }
@@ -919,13 +919,13 @@ elseif($this->group) {
                         array_key_exists($host, $this->host_problems[$this->group]) &&
                         array_key_exists($plugin, $this->host_problems[$this->group][$host])
                     ) {
-                        if(array_key_exists('critical', $this->host_problems[$group][$host][$plugin])) {
+                        if(array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'crit';
                         }
-                        elseif(array_key_exists('warning', $this->host_problems[$group][$host][$plugin])) {
+                        elseif(array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'warn';
                         }
-                        elseif(array_key_exists('unknown', $this->host_problems[$group][$host][$plugin])) {
+                        elseif(array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
                             $attrs['class'] = 'unkn';
                         }
                     }
