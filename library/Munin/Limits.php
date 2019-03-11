@@ -4,8 +4,10 @@ namespace Icinga\Module\Munin;
 
 use Icinga\Application\Logger;
 
-class Limits {
-    public static function parseFile($file) {
+class Limits
+{
+    public static function parseFile($file)
+    {
         $limits = [];
 
         if(is_file($file) && is_readable($file)) {
@@ -47,7 +49,8 @@ class Limits {
         return $limits;
     }
 
-    public static function getProblems() {
+    public static function getProblems()
+    {
         $problems = [
                       'critical',
                       'warning',
@@ -57,7 +60,8 @@ class Limits {
         return $problems;
     }
 
-    public static function getProblemTitle() {
+    public static function getProblemTitle()
+    {
         $problem_title = [
                            'critical' => 'Critical',
                            'warning'  => 'Warning',
@@ -67,7 +71,8 @@ class Limits {
         return $problem_title;
     }
 
-    public static function getProblemCount($limits, $data) {
+    public static function getProblemCount($limits, $data)
+    {
         $problems = static::getProblems();
 
         $problem_count = [];
@@ -130,7 +135,8 @@ class Limits {
         return $problem_count;
     }
 
-    public static function getProblemHosts($limits, $data) {
+    public static function getProblemHosts($limits, $data)
+    {
         $problem_hosts = [];
 
         if(
@@ -171,7 +177,8 @@ class Limits {
         return $problem_hosts;
     }
 
-    public static function getHostProblems($limits, $data) {
+    public static function getHostProblems($limits, $data)
+    {
         $host_problems = [];
 
         if(
@@ -225,7 +232,8 @@ class Limits {
         return $host_problems;
     }
 
-    public static function getCategoryProblems($limits, $data) {
+    public static function getCategoryProblems($limits, $data)
+    {
         $category_problems = [];
 
         if(

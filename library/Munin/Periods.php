@@ -2,8 +2,10 @@
 
 namespace Icinga\Module\Munin;
 
-class Periods {
-    public static function getPeriods() {
+class Periods
+{
+    public static function getPeriods()
+    {
         $periods = [
                      'day',
                      'week',
@@ -14,7 +16,8 @@ class Periods {
         return $periods;
     }
 
-    public static function getPeriodDays() {
+    public static function getPeriodDays()
+    {
         $period_days = [
                          'day'   => 1,
                          'week'  => 7,
@@ -25,7 +28,8 @@ class Periods {
         return $period_days;
     }
 
-    public static function getPeriodicity() {
+    public static function getPeriodicity()
+    {
         $periodicity = [
                          'day'   => 'daily',
                          'week'  => 'weekly',

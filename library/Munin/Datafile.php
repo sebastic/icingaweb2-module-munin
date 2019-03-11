@@ -4,8 +4,10 @@ namespace Icinga\Module\Munin;
 
 use Icinga\Application\Logger;
 
-class Datafile {
-    public static function parseFile($file) {
+class Datafile
+{
+    public static function parseFile($file)
+    {
         $data = [];
 
         if(is_file($file) && is_readable($file)) {
@@ -66,7 +68,8 @@ class Datafile {
         return $data;
     }
 
-    public static function getGroups($data) {
+    public static function getGroups($data)
+    {
         $groups = [];
 
         if(
@@ -81,7 +84,8 @@ class Datafile {
         return $groups;
     }
 
-    public static function getCategories($data) {
+    public static function getCategories($data)
+    {
         $categories = [];
 
         if(
@@ -109,7 +113,8 @@ class Datafile {
         return $categories;
     }
 
-    public static function getGroupCategories($data) {
+    public static function getGroupCategories($data)
+    {
         $group_categories = [];
 
         if(
@@ -140,7 +145,8 @@ class Datafile {
         return $group_categories;
     }
 
-    public static function getHostCategories($data) {
+    public static function getHostCategories($data)
+    {
         $host_categories = [];
 
         if(
