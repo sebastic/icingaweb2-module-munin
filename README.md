@@ -36,6 +36,12 @@ cd /usr/local/share/icingaweb2/modules
 git clone https://github.com/sebastic/icingaweb2-module-munin.git munin
 ```
 
+Ensure that the `module_path` in the `global` section of the [Icinga Web 2 `config.ini`](https://icinga.com/docs/icingaweb2/latest/doc/03-Configuration/#configuration-general) includes the path for custom modules, e.g.:
+
+```
+module_path = "/usr/share/icingaweb2/modules:/usr/local/share/icingaweb2/modules"
+```
+
 ### Enable Icinga Web 2 module
 
 Enable the module in the Icinga Web 2 frontend in `Configuration -> Modules -> munin -> State`.
