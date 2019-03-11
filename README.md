@@ -33,7 +33,7 @@ Extract this module to your Icinga Web 2 modules directory in the `munin` direct
 ```
 mkdir -p /usr/local/share/icingaweb2/modules
 cd /usr/local/share/icingaweb2/modules
-git clone https://git.linuxminded.nl/git/icingaweb2-module-munin.git munin
+git clone https://github.com/sebastic/icingaweb2-module-munin.git munin
 ```
 
 ### Enable Icinga Web 2 module
