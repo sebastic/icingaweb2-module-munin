@@ -50,7 +50,7 @@ icingacli module enable munin
 ### Munin Configuration
 
 The base URL for Munin (e.g. `/munin`) must be accessible on the webserver.
-When using `graph_strategy cgi` the base URL for `munin-cgi-graph` must also be accessible.
+When using `graph_strategy cgi` the base URL for `munin-cgi-graph` (e.g. `/munin-cgi/munin-cgi-graph`) must also be accessible.
 
 ### Module Configuration
 
