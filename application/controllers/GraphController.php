@@ -12,14 +12,23 @@ class GraphController extends Controller
 {
     public function showAction()
     {
-        $this->view->group      = $this->params->get('group');
-        $this->view->host       = $this->params->get('host');
-        $this->view->plugin     = $this->params->get('plugin');
+        $group    = $this->params->get('group');
+        $host     = $this->params->get('host');
+        $plugin   = $this->params->get('plugin');
 
-        $this->view->category   = $this->params->get('category');
-        $this->view->period     = $this->params->get('period');
+        $category = $this->params->get('category');
+        $period   = $this->params->get('period');
 
-        $this->view->debug      = $this->params->get('debug');
+        $debug    = $this->params->get('debug');
+
+        $this->view->group    = $group;
+        $this->view->host     = $host;
+        $this->view->plugin   = $plugin;
+
+        $this->view->category = $category;
+        $this->view->period   = $period;
+
+        $this->view->debug    = $debug;
 
 
         $config = $this->Config();
@@ -89,10 +98,39 @@ class GraphController extends Controller
 
         $periodicity = Periods::getPeriodicity();
         $this->view->periodicity = $periodicity;
+
+
+        $title = "Munin";
+        if ($group && in_array($group, $groups)) {
+            $title = "$group :: $title";
+
+            if ($host &&
+                array_key_exists('_group', $data) &&
+                array_key_exists($group, $data['_group']) &&
+                array_key_exists($host, $data['_group'][$group])
+            ) {
+                $title = "$host :: $title";
+
+                if ($plugin &&
+                    array_key_exists('_plugin', $data['_group'][$group][$host]) &&
+                    array_key_exists($plugin, $data['_group'][$group][$host]['_plugin'])
+                ) {
+                    $title = "$plugin :: $title";
+                }
+            }
+        } elseif ($category &&
+                  in_array($category, $categories)
+                 ) {
+            $title = "$category :: $title";
+        }
+        $this->view->title = $title;
     }
 
     public function problemsAction()
     {
         $this->showAction();
+
+        $title = "Problems :: Munin";
+        $this->view->title = $title;
     }
 }
