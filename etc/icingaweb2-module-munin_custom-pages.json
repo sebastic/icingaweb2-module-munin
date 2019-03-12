@@ -1,0 +1,49 @@
+{
+  "apache-example": {
+    "title": "Apache Example",
+    "graphs": [
+      [
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_volume",
+          "host": "host1.example.com"
+        },
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_volume",
+          "host": "host2.example.com"
+        }
+      ],
+      [
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_accesses",
+          "host": "host1.example.com"
+        },
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_accesses",
+          "host": "host2.example.com"
+        }
+      ],
+      [
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_processes",
+          "host": "host1.example.com"
+        },
+        {
+          "group": "example.com",
+          "period": "day",
+          "plugin": "apache_processes",
+          "host": "host2.example.com"
+        }
+      ]
+    ]
+  }
+}

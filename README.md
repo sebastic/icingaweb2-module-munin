@@ -72,3 +72,18 @@ Adjust the content of the configuration file to match your Munin setup.
 
 When not using cron to generate the graphs, make sure to change `graph_strategy` to `cgi`.
 
+### Custom Pages
+
+In addition to the standard pages provided by Munin, this module supports adding custom pages.
+
+Custom pages are configured in a JSON configuration file.
+
+Have a look at [icingaweb2-module-munin_custom-pages.json](etc/icingaweb2-module-munin_custom-pages.json) for an example.
+
+To enable custom pages, add the `custom_pages` section to module `config.ini` and specify the path to the configuration file.
+
+```
+[custom_pages]
+config_file = "/usr/local/etc/icingaweb2-module-munin_custom-pages.json"
+```
+

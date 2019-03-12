@@ -4,6 +4,7 @@ namespace Icinga\Module\Munin\Controllers;
 
 use Icinga\Web\Controller;
 
+use Icinga\Module\Munin\CustomPages;
 use Icinga\Module\Munin\Datafile;
 use Icinga\Module\Munin\Limits;
 use Icinga\Module\Munin\Periods;
@@ -48,6 +49,11 @@ class GraphController extends Controller
         } else {
             $this->view->graph_baseurl = $munin_baseurl;
         }
+
+
+        $config_file = $this->config->get('custom_pages', 'config_file');
+        $custom_pages = CustomPages::parseConfig($config_file);
+        $this->view->custom_pages = $custom_pages;
 
 
         $datafile_path = $config->get('global', 'datafile_path', '/var/lib/munin/datafile');
@@ -131,6 +137,27 @@ class GraphController extends Controller
         $this->showAction();
 
         $title = "Problems :: Munin";
+        $this->view->title = $title;
+    }
+
+    public function customAction()
+    {
+        $this->showAction();
+
+        $page = $this->params->get('page');
+        $this->view->page = $page;
+
+        $title = "Munin";
+        if (count($this->view->custom_pages) > 0 &&
+            array_key_exists($page, $this->view->custom_pages) &&
+            array_key_exists('title', $this->view->custom_pages[$page])
+        ) {
+            $custom_title = $this->view->custom_pages[$page]['title'];
+
+            $title = "$custom_title :: $title";
+        } else {
+            $title = "Custom Page :: $title";
+        }
         $this->view->title = $title;
     }
 }

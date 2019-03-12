@@ -9,7 +9,19 @@ $title = $this->qlink(
 
 $subtitle = '';
 
-if (basename(__FILE__) == 'problems.phtml') {
+if (basename(__FILE__) == 'custom.phtml') {
+    if ($this->page &&
+        count($this->custom_pages) > 0 &&
+        array_key_exists($this->page, $this->custom_pages) &&
+        array_key_exists('title', $this->custom_pages[$this->page])
+    ) {
+        $custom_title = $this->custom_pages[$this->page]['title'];
+
+        $title .= " :: $custom_title";
+    } else {
+        $title .= " :: Custom Page";
+    }
+} elseif (basename(__FILE__) == 'problems.phtml') {
     $title .= ' :: Problem overview :: [';
     foreach ($this->problems as $problem) {
         $title .= " <a href=\"#". $this->escape($problem) ."\">";
@@ -196,12 +208,147 @@ if (count($this->categories) > 0) {
     print "     </ul>\n";
 }
 
+if (count($this->custom_pages) > 0) {
+    print "     <h2>Custom Pages</h2>\n";
+    print "     <ul>\n";
+    foreach ($this->custom_pages as $page => $page_value) {
+        $title = 'N/A';
+        if ($page_value['title']) {
+            $title = $page_value['title'];
+        }
+
+        print "     <li>";
+        print $this->qlink(
+            $this->escape($title),
+            'munin/graph/custom',
+            [
+              'page' => $page,
+            ]
+        );
+        print "     </li>\n";
+    }
+    print "     </ul>\n";
+}
+
 ?>
    </div>
    <div id="content">
 <?php
 
-if (basename(__FILE__) == 'problems.phtml') {
+if (basename(__FILE__) == 'custom.phtml' &&
+    $this->page &&
+    count($this->custom_pages) > 0 &&
+    array_key_exists($this->page, $this->custom_pages)
+) {
+    $custom_page = $this->custom_pages[$this->page];
+
+    if (array_key_exists('graphs', $custom_page)) {
+        $max_columns = 0;
+        foreach ($custom_page['graphs'] as $row) {
+            $columns = count($row);
+
+            if ($columns > $max_columns) {
+                $max_columns = $columns;
+            }
+        }
+
+        print "<table>\n";
+        foreach ($custom_page['graphs'] as $row) {
+            $row_count = count($row);
+
+            if ($row_count == 0) {
+                continue;
+            }
+
+            print "<tr>";
+
+            $i = 0;
+            foreach ($row as $column => $column_value) {
+                $i++;
+
+                print "<td>";
+                if (array_key_exists('group', $column_value) &&
+                    array_key_exists('host', $column_value) &&
+                    array_key_exists('plugin', $column_value) &&
+                    array_key_exists('period', $column_value) &&
+                    in_array($column_value['period'], $this->periods) &&
+                    array_key_exists('_group', $this->data) &&
+                    array_key_exists($column_value['group'], $this->data['_group']) &&
+                    array_key_exists($column_value['host'], $this->data['_group'][$column_value['group']]) &&
+                    array_key_exists('_plugin', $this->data['_group'][$column_value['group']][$column_value['host']]) &&
+                    array_key_exists($column_value['plugin'], $this->data['_group'][$column_value['group']][$column_value['host']]['_plugin']) &&
+                    count($this->data['_group'][$column_value['group']][$column_value['host']]['_plugin'][$column_value['plugin']]) > 0
+                ) {
+                    $group  = $column_value['group'];
+                    $host   = $column_value['host'];
+                    $plugin = $column_value['plugin'];
+                    $period = $column_value['period'];
+
+                    $title = $plugin;
+                    if (array_key_exists('graph_title', $this->data['_group'][$group][$host]['_plugin'][$plugin])) {
+                        $title = $this->data['_group'][$group][$column_value['host']]['_plugin'][$plugin]['graph_title'];
+                    }
+
+                    print "<div class=\"node\">\n";
+                    print "<span class=\"nodetitle\">";
+                    print $this->qlink(
+                        $this->escape($host),
+                        'munin/graph/show',
+                        [
+                          'group' => $group,
+                          'host'  => $host,
+                        ]
+                    );
+                    print " :: ";
+                    print $this->qlink(
+                        $this->escape($title),
+                        'munin/graph/show',
+                        [
+                          'group'  => $group,
+                          'host'   => $host,
+                          'plugin' => $plugin,
+                        ]
+                    );
+                    print "</span>\n";
+
+                    print "<br/>\n";
+
+                    $url  = 'show';
+                    $url .= '?group='.  $this->escape($group);
+                    $url .= '&host='.   $this->escape($host);
+                    $url .= '&plugin='. $this->escape($plugin);
+
+                    $img  = $this->graph_baseurl;
+                    $img .= '/'. $this->escape($group);
+                    $img .= '/'. $this->escape($host);
+                    $img .= '/'. $this->escape($plugin);
+                    $img .= '-'. $this->escape($period). '.png';
+
+                    print "<a href=\"$url\"><img src=\"$img\" alt=\"$title\" class=\"i\" /></a>";
+                    print "</div>\n";
+                } else {
+                    print "&nbsp;";
+                }
+                print "</td>";
+
+                if ($i == $row_count && $i < $max_columns) {
+                    $rest = $row_count - $i;
+
+                    print "<td";
+                    if ($rest > 1) {
+                        print " colspan=\"$rest\"";
+                    }
+                    print ">";
+                    print "&nbsp;";
+                    print "</td>";
+                }
+            }
+
+            print "</tr>\n";
+        }
+        print "</table>\n";
+    }
+} elseif (basename(__FILE__) == 'problems.phtml') {
     foreach ($this->problems as $problem) {
         print "<div id=\"$problem\" class=\"problem\">\n";
         print "<h3>". $this->problem_title[$problem] ."</h3>\n";
@@ -999,6 +1146,11 @@ if ($this->debug) {
     print "Category Problems:\n";
     print "<pre>";
     var_dump($this->category_problems);
+    print "</pre>";
+
+    print "Custom Pages:\n";
+    print "<pre>";
+    var_dump($this->custom_pages);
     print "</pre>";
 }
 
