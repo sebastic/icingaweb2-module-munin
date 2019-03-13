@@ -25,7 +25,21 @@ class CustomPages
                 if ($data === null) {
                     Logger::error("Failed to parse config file: $file");
                 } else {
-                    $custom_pages = $data;
+                    $by_title = [];
+                    foreach ($data as $key => $value) {
+                        $title = 'N/A';
+                        if (array_key_exists('title', $value)) {
+                            $title = $value['title'];
+                        }
+
+                        $by_title[$title] = $key;
+                    }
+
+                    ksort($by_title);
+
+                    foreach ($by_title as $title => $key) {
+                        $custom_pages[$key] = $data[$key];
+                    }
                 }
             }
         } else {
