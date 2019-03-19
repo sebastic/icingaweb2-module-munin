@@ -502,6 +502,26 @@ if (basename(__FILE__) == 'custom.phtml' &&
                             array_key_exists($plugin, $host_value['_plugin']) &&
                             count($host_value['_plugin'][$plugin]) > 0
                         ) {
+                            $class = '';
+                            if (array_key_exists($group, $this->host_problems) &&
+                                array_key_exists($host, $host_problems[$group]) &&
+                                array_key_exists($plugin, $this->host_problems[$group][$host])
+                            ) {
+                                if (array_key_exists('critical', $this->host_problems[$group][$host][$plugin])) {
+                                    $class = 'crit';
+                                } elseif (array_key_exists('warning', $this->host_problems[$group][$host][$plugin])) {
+                                    $class = 'warn';
+                                } elseif (array_key_exists('unknown', $this->host_problems[$group][$host][$plugin])) {
+                                    $class = 'unkn';
+                                }
+                            }
+                            $i_class = 'i'. $class;
+
+                            $attrs = [];
+                            if ($class) {
+                                $attrs['class'] = $class;
+                            }
+
                             print "<div class=\"node\">\n";
                             print "<span class=\"nodetitle\">";
 
@@ -523,7 +543,8 @@ if (basename(__FILE__) == 'custom.phtml' &&
                                   'group'  => $group,
                                   'host'   => $host,
                                   'plugin' => $plugin,
-                                ]
+                                ],
+                                $attrs
                             );
 
                             print "</span>\n";
@@ -541,7 +562,11 @@ if (basename(__FILE__) == 'custom.phtml' &&
                             $img .= '/'. $this->escape($plugin);
                             $img .= '-'. $this->escape($this->period). '.png';
 
-                            print "<a href=\"$url\"><img src=\"$img\" alt=\"$title\" /></a>";
+                            print "<a href=\"$url\"";
+                            if ($class) {
+                                print " class=\"$class\"";
+                            }
+                            print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
 
                             print "</div>\n";
                         }
