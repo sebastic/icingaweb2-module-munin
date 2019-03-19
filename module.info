@@ -1,5 +1,5 @@
 Module: munin
-Version: 0.1.0
+Version: 0.1.1
 Description: Munin module
  Provides access to Munin graphs in Icinga Web 2.
 
