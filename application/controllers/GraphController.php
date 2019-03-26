@@ -13,6 +13,8 @@ class GraphController extends Controller
 {
     public function showAction()
     {
+        $this->setAutorefreshInterval(300);
+
         $group    = $this->params->get('group');
         $host     = $this->params->get('host');
         $plugin   = $this->params->get('plugin');
