@@ -145,9 +145,9 @@ print "</h1>\n";
    <div id="nav">
      <h2>Problems</h2>
      <ul>
-       <li><a href="problems#critical">Critical</a> (<?= $this->problem_count['critical'] ?>)</li>
-       <li><a href="problems#warning">Warning</a> (<?= $this->problem_count['warning'] ?>)</li>
-       <li><a href="problems#unknown">Unknown</a> (<?= $this->problem_count['unknown'] ?>)</li>
+       <li><?= $this->qlink('Critical', 'munin/graph/problems#critical') ?> (<?= $this->problem_count['critical'] ?>)</li>
+       <li><?= $this->qlink('Warning', 'munin/graph/problems#warning') ?> (<?= $this->problem_count['warning'] ?>)</li>
+       <li><?= $this->qlink('Unknown', 'munin/graph/problems#unknown') ?> (<?= $this->problem_count['unknown'] ?>)</li>
      </ul>
 
      <h2>Groups</h2>
