@@ -9,7 +9,9 @@ $title = $this->qlink(
 
 $subtitle = '';
 
-if (basename(__FILE__) == 'custom.phtml') {
+$url = parse_url($_SERVER["REQUEST_URI"]);
+
+if (basename($url['path']) == 'custom') {
     if ($this->page &&
         count($this->custom_pages) > 0 &&
         array_key_exists($this->page, $this->custom_pages) &&
@@ -21,7 +23,7 @@ if (basename(__FILE__) == 'custom.phtml') {
     } else {
         $title .= " :: Custom Page";
     }
-} elseif (basename(__FILE__) == 'problems.phtml') {
+} elseif (basename($url['path']) == 'problems') {
     $title .= ' :: Problem overview :: [';
     foreach ($this->problems as $problem) {
         $title .= " <a href=\"#". $this->escape($problem) ."\">";
@@ -235,7 +237,7 @@ if (count($this->custom_pages) > 0) {
    <div id="content">
 <?php
 
-if (basename(__FILE__) == 'custom.phtml' &&
+if (basename($url['path']) == 'custom' &&
     $this->page &&
     count($this->custom_pages) > 0 &&
     array_key_exists($this->page, $this->custom_pages)
@@ -374,7 +376,7 @@ if (basename(__FILE__) == 'custom.phtml' &&
         }
         print "</table>\n";
     }
-} elseif (basename(__FILE__) == 'problems.phtml') {
+} elseif (basename($url['path']) == 'problems') {
     foreach ($this->problems as $problem) {
         print "<div id=\"$problem\" class=\"problem\">\n";
         print "<h3>". $this->problem_title[$problem] ."</h3>\n";
