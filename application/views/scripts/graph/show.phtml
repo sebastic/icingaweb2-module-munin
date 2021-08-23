@@ -336,22 +336,28 @@ if (basename($url['path']) == 'custom' &&
 
                     print "<br/>\n";
 
-                    $url  = 'show';
-                    $url .= '?group='.  $this->escape($group);
-                    $url .= '&host='.   $this->escape($host);
-                    $url .= '&plugin='. $this->escape($plugin);
-
                     $img  = $this->graph_baseurl;
                     $img .= '/'. $this->escape($group);
                     $img .= '/'. $this->escape($host);
                     $img .= '/'. $this->escape($plugin);
                     $img .= '-'. $this->escape($period). '.png';
 
-                    print "<a href=\"$url\"";
-                    if ($class) {
-                        print " class=\"$class\"";
-                    }
-                    print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
+                    $link = $this->qlink(
+                        'IMAGE',
+                        'munin/graph/show',
+                        [
+                          'group'  => $group,
+                          'host'   => $host,
+                          'plugin' => $plugin,
+                        ],
+                        $attrs,
+                    );
+
+                    print str_replace(
+                        'IMAGE',
+                        "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                        $link,
+                    );
 
                     print "</div>\n";
                 } else {
@@ -428,18 +434,28 @@ if (basename($url['path']) == 'custom' &&
 
                         print "<br/>\n";
 
-                        $url  = 'show';
-                        $url .= '?group='.  $this->escape($group);
-                        $url .= '&host='.   $this->escape($host);
-                        $url .= '&plugin='. $this->escape($plugin);
-
                         $img  = $this->graph_baseurl;
                         $img .= '/'. $this->escape($group);
                         $img .= '/'. $this->escape($host);
                         $img .= '/'. $this->escape($plugin);
                         $img .= '-day.png';
 
-                        print "<a href=\"$url\"><img src=\"$img\" alt=\"$title\" class=\"i\" /></a>";
+                        $link = $this->qlink(
+                            'IMAGE',
+                            'munin/graph/show',
+                            [
+                              'group'  => $group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ]
+                        );
+
+                        print str_replace(
+                            'IMAGE',
+                            "<img src=\"$img\" alt=\"$title\" class=\"i\" />",
+                            $link,
+                        );
+
                         print "</div>\n";
 
                         print "</td><td>\n";
@@ -468,18 +484,28 @@ if (basename($url['path']) == 'custom' &&
 
                         print "<br/>\n";
 
-                        $url  = 'show';
-                        $url .= '?group='.  $this->escape($group);
-                        $url .= '&host='.   $this->escape($host);
-                        $url .= '&plugin='. $this->escape($plugin);
-
                         $img  = $this->graph_baseurl;
                         $img .= '/'. $this->escape($group);
                         $img .= '/'. $this->escape($host);
                         $img .= '/'. $this->escape($plugin);
                         $img .= '-week.png';
 
-                        print "<a href=\"$url\"><img src=\"$img\" alt=\"$title\" class=\"i\" /></a>";
+                        $link = $this->qlink(
+                            'IMAGE',
+                            'munin/graph/show',
+                            [
+                              'group'  => $group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ]
+                        );
+
+                        print str_replace(
+                            'IMAGE',
+                            "<img src=\"$img\" alt=\"$title\" class=\"i\" />",
+                            $link,
+                        );
+
                         print "</div>\n";
 
                         print "</td></tr>\n";
@@ -579,22 +605,28 @@ if (basename($url['path']) == 'custom' &&
 
                             print "<br/>\n";
 
-                            $url  = 'show';
-                            $url .= '?group='.  $this->escape($group);
-                            $url .= '&host='.   $this->escape($host);
-                            $url .= '&plugin='. $this->escape($plugin);
-
                             $img  = $this->graph_baseurl;
                             $img .= '/'. $this->escape($group);
                             $img .= '/'. $this->escape($host);
                             $img .= '/'. $this->escape($plugin);
                             $img .= '-'. $this->escape($this->period). '.png';
 
-                            print "<a href=\"$url\"";
-                            if ($class) {
-                                print " class=\"$class\"";
-                            }
-                            print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
+                            $link = $this->qlink(
+                                'IMAGE',
+                                'munin/graph/show',
+                                [
+                                  'group'  => $group,
+                                  'host'   => $host,
+                                  'plugin' => $plugin,
+                                ],
+                                $attrs
+                            );
+
+                            print str_replace(
+                                'IMAGE',
+                                "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                                $link,
+                            );
 
                             print "</div>\n";
                         }
@@ -846,11 +878,6 @@ if (basename($url['path']) == 'custom' &&
                 print "<tr><td colspan=\"2\">$title</td></tr>\n";
                 print "<tr><td>";
 
-                $url  = 'show';
-                $url .= '?group='.  $this->escape($this->group);
-                $url .= '&host='.   $this->escape($this->host);
-                $url .= '&plugin='. $this->escape($plugin);
-
                 $class = '';
                 if (array_key_exists($this->group, $this->host_problems) &&
                     array_key_exists($this->host, $this->host_problems[$this->group]) &&
@@ -866,17 +893,34 @@ if (basename($url['path']) == 'custom' &&
                 }
                 $i_class = 'i'. $class;
 
+                $attr = [];
+                if ($class) {
+                    $attr['class'] = $class;
+                }
+
                 $img  = $this->graph_baseurl;
                 $img .= '/'. $this->escape($this->group);
                 $img .= '/'. $this->escape($this->host);
                 $img .= '/'. $this->escape($plugin);
                 $img .= '-day.png';
 
-                print "<a href=\"$url\"";
-                if ($class) {
-                    print " class=\"$class\"";
-                }
-                print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
+                $link = $this->qlink(
+                    'IMAGE',
+                    'munin/graph/show',
+                    [
+                      'group'  => $this->group,
+                      'host'   => $this->host,
+                      'plugin' => $plugin,
+                    ],
+                    $attr,
+                );
+
+                print str_replace(
+                    'IMAGE',
+                    "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                    $link,
+                );
+
                 print "</td><td>";
 
                 $img  = $this->graph_baseurl;
@@ -885,11 +929,12 @@ if (basename($url['path']) == 'custom' &&
                 $img .= '/'. $this->escape($plugin);
                 $img .= '-week.png';
 
-                print "<a href=\"$url\"";
-                if ($class) {
-                    print " class=\"$class\"";
-                }
-                print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
+                print str_replace(
+                    'IMAGE',
+                    "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                    $link,
+                );
+
                 print "</td></tr>\n";
             }
             print "</table>\n";
@@ -1000,22 +1045,28 @@ if (basename($url['path']) == 'custom' &&
 
                         print "<br/>\n";
 
-                        $url  = 'show';
-                        $url .= '?group='.  $this->escape($this->group);
-                        $url .= '&host='.   $this->escape($host);
-                        $url .= '&plugin='. $this->escape($plugin);
-
                         $img  = $this->graph_baseurl;
                         $img .= '/'. $this->escape($this->group);
                         $img .= '/'. $this->escape($host);
                         $img .= '/'. $this->escape($plugin);
                         $img .= '-'. $this->escape($this->period) .'.png';
 
-                        print "<a href=\"$url\"";
-                        if ($class) {
-                            print " class=\"$class\"";
-                        }
-                        print "><img src=\"$img\" alt=\"$title\" class=\"$i_class\" /></a>";
+                        $link = $this->qlink(
+                            'IMAGE',
+                            'munin/graph/show',
+                            [
+                              'group'  => $this->group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ],
+                            $attrs
+                        );
+
+                        print str_replace(
+                            'IMAGE',
+                            "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                            $link,
+                        );
                     }
 
                     print "</div>";
@@ -1063,13 +1114,15 @@ if (basename($url['path']) == 'custom' &&
 
                 asort($plugins);
 
-                $url  = 'show';
-                $url .= '?group='. $this->escape($this->group);
-                $url .= '&host='.  $this->escape($host);
-                $url .= '#'.       $this->escape($category);
-
                 print "        <li>";
-                print "<a href=\"$url\">$category</a>";
+                print $this->qlink(
+                    $this->escape($category),
+                    'munin/graph/show#'.$this->escape($category),
+                    [
+                      'group' => $this->group,
+                      'host'  => $host,
+                    ]
+                );
                 print "          <ul>\n";
                 foreach ($plugins as $plugin => $title) {
                     $attrs = [];
@@ -1151,11 +1204,6 @@ if (basename($url['path']) == 'custom' &&
             );
             print " :: [";
             foreach ($host_value['_category'] as $category => $category_value) {
-                $url  = 'show';
-                $url .= '?group='. $this->escape($group);
-                $url .= '&host='.  $this->escape($host);
-                $url .= '#'.       $this->escape($category);
-
                 $class = '';
                 if (array_key_exists($group, $this->category_problems) &&
                     array_key_exists($host, $this->category_problems[$group]) &&
@@ -1170,11 +1218,21 @@ if (basename($url['path']) == 'custom' &&
                     }
                 }
 
-                print " <a href=\"$url\"";
+                $attrs = [];
                 if ($class) {
-                    print " class=\"$class\"";
+                    $attrs['class'] = $class;
                 }
-                print ">$category</a>";
+
+                print " ";
+                print $this->qlink(
+                    $this->escape($category),
+                    'munin/graph/show#'.$this->escape($category),
+                    [
+                      'group' => $group,
+                      'host'  => $host,
+                    ],
+                    $attrs,
+                );
             }
             print " ]\n";
             print "        </li>\n";
