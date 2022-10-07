@@ -49,7 +49,24 @@ if (basename($url['path']) == 'custom') {
         ) {
             $subtitle  = $this->group .' :: [';
             foreach ($this->group_categories[$this->group] as $category) {
-                $subtitle .= " <a href=\"#". $this->escape($category) ."\">";
+                $class = '';
+                if (array_key_exists($this->group, $this->group_category_problems) &&
+                    array_key_exists($category, $this->group_category_problems[$this->group])
+                ) {
+                    if (array_key_exists('critical', $this->group_category_problems[$this->group][$category])) {
+                        $class = 'crit';
+                    } elseif (array_key_exists('warning', $this->group_category_problems[$this->group][$category])) {
+                        $class = 'warn';
+                    } elseif (array_key_exists('unknown', $this->group_category_problems[$this->group][$category])) {
+                        $class = 'unkn';
+                    }
+                }
+
+                $subtitle .= " <a href=\"#". $this->escape($category) ."\"";
+                if ($class) {
+                    $subtitle .= " class=\"$class\"";
+                }
+                $subtitle .= ">";
                 $subtitle .= $this->escape($category);
                 $subtitle .= "</a>";
             }
@@ -80,7 +97,21 @@ if (basename($url['path']) == 'custom') {
                   'host'  => $this->host,
                 ]
             );
-            $title .= ' :: '. $this->plugin;
+
+            if ($this->subgraph) {
+                $title .= ' :: '. $this->qlink(
+                    $this->escape($this->plugin),
+                    'munin/graph/show',
+                    [
+                      'group'  => $this->group,
+                      'host'   => $this->host,
+                      'plugin' => $this->plugin,
+                    ]
+                );
+                $title .= ' :: '. $this->subgraph;
+            } else {
+                $title .= ' :: '. $this->plugin;
+            }
         } else {
             $title .= ' :: '. $this->host;
 
@@ -294,13 +325,14 @@ if (basename($url['path']) == 'custom' &&
                     $class = '';
                     if (array_key_exists($group, $this->host_problems) &&
                         array_key_exists($host, $host_problems[$group]) &&
-                        array_key_exists($plugin, $this->host_problems[$group][$host])
+                        array_key_exists('_plugin', $host_problems[$group][$host]) &&
+                        array_key_exists($plugin, $this->host_problems[$group][$host]['_plugin'])
                     ) {
-                        if (array_key_exists('critical', $this->host_problems[$group][$host][$plugin])) {
+                        if (array_key_exists('critical', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                             $class = 'crit';
-                        } elseif (array_key_exists('warning', $this->host_problems[$group][$host][$plugin])) {
+                        } elseif (array_key_exists('warning', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                             $class = 'warn';
-                        } elseif (array_key_exists('unknown', $this->host_problems[$group][$host][$plugin])) {
+                        } elseif (array_key_exists('unknown', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                             $class = 'unkn';
                         }
                     }
@@ -406,6 +438,34 @@ if (basename($url['path']) == 'custom' &&
                             array_key_exists('graph_title', $this->data['_group'][$group][$host]['_plugin'][$plugin])
                         ) {
                             $title = $this->data['_group'][$group][$host]['_plugin'][$plugin]['graph_title'];
+                        } elseif (preg_match('/;/', $plugin)) {
+                            $title = preg_replace('/;/', '.', $plugin);
+
+                            $parts = preg_split('/;/', $plugin);
+                            $root  = array_shift($parts);
+                            $key   = implode('.', $parts) . ".graph_title";
+
+                            if (array_key_exists('_group', $this->data) &&
+                                array_key_exists($group, $this->data['_group']) &&
+                                array_key_exists($host, $this->data['_group'][$group]) &&
+                                array_key_exists('_plugin', $this->data['_group'][$group][$host]) &&
+                                array_key_exists($root, $this->data['_group'][$group][$host]['_plugin']) &&
+                                array_key_exists($key, $this->data['_group'][$group][$host]['_plugin'][$root])
+                            ) {
+                                $title = $this->data['_group'][$group][$host]['_plugin'][$root][$key];
+                            }
+                        }
+
+                        $args = [
+                            'group'  => $group,
+                            'host'   => $host,
+                            'plugin' => $plugin,
+                        ];
+
+                        $parts = preg_split('/;/', $plugin);
+                        if (count($parts) > 1) {
+                            $args['plugin']   = array_shift($parts);
+                            $args['subgraph'] = implode('.', $parts);
                         }
 
                         print "<tr><td>\n";
@@ -424,11 +484,7 @@ if (basename($url['path']) == 'custom' &&
                         print $this->qlink(
                             $this->escape($title),
                             'munin/graph/show',
-                            [
-                              'group'  => $group,
-                              'host'   => $host,
-                              'plugin' => $plugin,
-                            ]
+                            $args,
                         );
                         print "</span>\n";
 
@@ -437,17 +493,15 @@ if (basename($url['path']) == 'custom' &&
                         $img  = $this->graph_baseurl;
                         $img .= '/'. $this->escape($group);
                         $img .= '/'. $this->escape($host);
-                        $img .= '/'. $this->escape($plugin);
+                        foreach (preg_split('/;/', $plugin) as $part) {
+                            $img .= '/'. $this->escape($part);
+                        }
                         $img .= '-day.png';
 
                         $link = $this->qlink(
                             'IMAGE',
                             'munin/graph/show',
-                            [
-                              'group'  => $group,
-                              'host'   => $host,
-                              'plugin' => $plugin,
-                            ]
+                            $args,
                         );
 
                         print str_replace(
@@ -474,11 +528,7 @@ if (basename($url['path']) == 'custom' &&
                         print $this->qlink(
                             $this->escape($title),
                             'munin/graph/show',
-                            [
-                              'group'  => $group,
-                              'host'   => $host,
-                              'plugin' => $plugin,
-                            ]
+                            $args,
                         );
                         print "</span>\n";
 
@@ -487,17 +537,15 @@ if (basename($url['path']) == 'custom' &&
                         $img  = $this->graph_baseurl;
                         $img .= '/'. $this->escape($group);
                         $img .= '/'. $this->escape($host);
-                        $img .= '/'. $this->escape($plugin);
+                        foreach (preg_split('/;/', $plugin) as $part) {
+                            $img .= '/'. $this->escape($part);
+                        }
                         $img .= '-week.png';
 
                         $link = $this->qlink(
                             'IMAGE',
                             'munin/graph/show',
-                            [
-                              'group'  => $group,
-                              'host'   => $host,
-                              'plugin' => $plugin,
-                            ]
+                            $args,
                         );
 
                         print str_replace(
@@ -523,6 +571,7 @@ if (basename($url['path']) == 'custom' &&
         ksort($this->data['_group']);
 
         $plugins = [];
+        $multigraph = [];
 
         foreach ($this->data['_group'] as $group => $group_value) {
             foreach ($group_value as $host => $host_value) {
@@ -537,6 +586,23 @@ if (basename($url['path']) == 'custom' &&
                         }
 
                         $plugins[$plugin] = $title;
+
+                        if (array_key_exists('_multigraph', $host_value) &&
+                            array_key_exists($plugin, $host_value['_multigraph']) &&
+                            count($host_value['_multigraph'][$plugin]) > 0
+                        ) {
+                            foreach ($host_value['_multigraph'][$plugin] as $subgraph) {
+                                $title = $plugin . '.' . $subgraph;
+
+                                $key = $subgraph . '.graph_title';
+
+                                if (array_key_exists($key, $plugin_value)) {
+                                    $title = $plugin_value[$key];
+                                }
+
+                                $multigraph[$plugin][$subgraph] = $title;
+                            }
+                        }
                     }
                 }
             }
@@ -559,13 +625,14 @@ if (basename($url['path']) == 'custom' &&
                             $class = '';
                             if (array_key_exists($group, $this->host_problems) &&
                                 array_key_exists($host, $host_problems[$group]) &&
-                                array_key_exists($plugin, $this->host_problems[$group][$host])
+                                array_key_exists('_plugin', $host_problems[$group][$host]) &&
+                                array_key_exists($plugin, $this->host_problems[$group][$host]['_plugin'])
                             ) {
-                                if (array_key_exists('critical', $this->host_problems[$group][$host][$plugin])) {
+                                if (array_key_exists('critical', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                                     $class = 'crit';
-                                } elseif (array_key_exists('warning', $this->host_problems[$group][$host][$plugin])) {
+                                } elseif (array_key_exists('warning', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                                     $class = 'warn';
-                                } elseif (array_key_exists('unknown', $this->host_problems[$group][$host][$plugin])) {
+                                } elseif (array_key_exists('unknown', $this->host_problems[$group][$host]['_plugin'][$plugin])) {
                                     $class = 'unkn';
                                 }
                             }
@@ -632,6 +699,103 @@ if (basename($url['path']) == 'custom' &&
                         }
                     }
                 }
+
+                if (array_key_exists($plugin, $multigraph)) {
+                    foreach ($multigraph[$plugin] as $subgraph => $title) {
+                        print "<h3>$title</h3>\n";
+
+                        foreach ($this->data['_group'] as $group => $group_value) {
+                            ksort($group_value);
+
+                            foreach ($group_value as $host => $host_value) {
+                                if (array_key_exists('_multigraph', $host_value) &&
+                                    array_key_exists($plugin, $host_value['_multigraph']) &&
+                                    count($host_value['_multigraph'][$plugin]) > 0 &&
+                                    in_array($subgraph, $host_value['_multigraph'][$plugin])
+                                ) {
+                                    $class = '';
+                                    if (array_key_exists($group, $this->host_problems) &&
+                                        array_key_exists($host, $host_problems[$group]) &&
+                                        array_key_exists('_multigraph', $host_problems[$group][$host]) &&
+                                        array_key_exists($plugin, $this->host_problems[$group][$host]['_multigraph']) &&
+                                        array_key_exists($subgraph, $this->host_problems[$group][$host]['_multigraph'][$plugin])
+                                    ) {
+                                        if (array_key_exists('critical', $this->host_problems[$group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                            $class = 'crit';
+                                        } elseif (array_key_exists('warning', $this->host_problems[$group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                            $class = 'warn';
+                                        } elseif (array_key_exists('unknown', $this->host_problems[$group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                            $class = 'unkn';
+                                        }
+                                    }
+                                    $i_class = 'i'. $class;
+
+                                    $attrs = [];
+                                    if ($class) {
+                                        $attrs['class'] = $class;
+                                    }
+
+                                    print "<div class=\"node\">\n";
+                                    print "<span class=\"nodetitle\">";
+
+                                    print $this->qlink(
+                                        $this->escape($host),
+                                        'munin/graph/show',
+                                        [
+                                          'group' => $group,
+                                          'host'  => $host,
+                                        ]
+                                    );
+
+                                    print " :: ";
+
+                                    print $this->qlink(
+                                        $this->escape($title),
+                                        'munin/graph/show',
+                                        [
+                                          'group'    => $group,
+                                          'host'     => $host,
+                                          'plugin'   => $plugin,
+                                          'subgraph' => $subgraph,
+                                        ],
+                                        $attrs
+                                    );
+
+                                    print "</span>\n";
+
+                                    print "<br/>\n";
+
+                                    $img  = $this->graph_baseurl;
+                                    $img .= '/'. $this->escape($group);
+                                    $img .= '/'. $this->escape($host);
+                                    $img .= '/'. $this->escape($plugin);
+                                    $img .= '/'. $this->escape($subgraph);
+                                    $img .= '-'. $this->escape($this->period). '.png';
+
+                                    $link = $this->qlink(
+                                        'IMAGE',
+                                        'munin/graph/show',
+                                        [
+                                          'group'    => $group,
+                                          'host'     => $host,
+                                          'plugin'   => $plugin,
+                                          'subgraph' => $subgraph,
+                                        ],
+                                        $attrs
+                                    );
+
+                                    print str_replace(
+                                        'IMAGE',
+                                        "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                                        $link,
+                                    );
+
+                                    print "</div>\n";
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -641,7 +805,12 @@ if (basename($url['path']) == 'custom' &&
         array_key_exists($this->host, $this->data['_group'][$this->group]) &&
         array_key_exists('_plugin', $this->data['_group'][$this->group][$this->host]) &&
         array_key_exists($this->plugin, $this->data['_group'][$this->group][$this->host]['_plugin']) &&
-        count($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]) > 0
+        count($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]) > 0 &&
+        (
+          !array_key_exists('_multigraph', $this->data['_group'][$this->group][$this->host]) ||
+          !array_key_exists($plugin, $this->data['_group'][$this->group][$this->host]['_multigraph']) ||
+          count($this->data['_group'][$this->group][$this->host]['_multigraph'][$plugin]) == 0
+        )
     ) {
         $dynazoom_baseurl  = $this->munin_baseurl;
         $dynazoom_baseurl .= '/static/dynazoom.html';
@@ -667,13 +836,14 @@ if (basename($url['path']) == 'custom' &&
             $class = '';
             if (array_key_exists($this->group, $this->host_problems) &&
                 array_key_exists($this->host, $this->host_problems[$this->group]) &&
-                array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host])
+                array_key_exists('_plugin', $this->host_problems[$this->group][$this->host]) &&
+                array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host]['_plugin'])
             ) {
-                if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_plugin'][$this->plugin])) {
                     $class = 'crit';
-                } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_plugin'][$this->plugin])) {
                     $class = 'warn';
-                } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+                } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host]['_plugin'][$this->plugin])) {
                     $class = 'unkn';
                 }
             }
@@ -709,18 +879,26 @@ if (basename($url['path']) == 'custom' &&
 
         print "</table>\n";
 
+        if (array_key_exists('graph_info', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin])) {
+                print "<p/>\n";
+                print "<p class=\"graph_info\">";
+                print $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]['graph_info'];
+                print "</p>\n";
+        }
+
         if (array_key_exists($this->group, $this->host_problems) &&
             array_key_exists($this->host, $this->host_problems[$this->group]) &&
-            array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host])
+            array_key_exists('_plugin', $this->host_problems[$this->group][$this->host]) &&
+            array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host]['_plugin'])
         ) {
-            if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+            if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_plugin'][$this->plugin])) {
                 print "<p/>\n";
                 print "<p>";
                 print "<strong>Note:</strong>";
                 print " This service is in CRITICAL state because one of the values reported is outside the allowed range.";
                 print " Please see further down for information about the ranges and the graph for the values.";
                 print "</p>\n";
-            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$this->plugin])) {
+            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_plugin'][$this->plugin])) {
                 print "<p/>\n";
                 print "<p>";
                 print "<strong>Note:</strong>";
@@ -848,6 +1026,339 @@ if (basename($url['path']) == 'custom' &&
         }
 
         print "</table>\n";
+    } elseif (!$this->subgraph &&
+              array_key_exists('_group', $this->data) &&
+              array_key_exists($this->group, $this->data['_group']) &&
+              array_key_exists($this->host, $this->data['_group'][$this->group]) &&
+              array_key_exists('_plugin', $this->data['_group'][$this->group][$this->host]) &&
+              array_key_exists($this->plugin, $this->data['_group'][$this->group][$this->host]['_plugin']) &&
+              count($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]) > 0 &&
+              array_key_exists('_multigraph_category', $this->data['_group'][$this->group][$this->host]) &&
+              array_key_exists($plugin, $this->data['_group'][$this->group][$this->host]['_multigraph_category']) &&
+              count($this->data['_group'][$this->group][$this->host]['_multigraph_category'][$plugin]) > 0
+    ) {
+        ksort($this->data['_group'][$this->group][$this->host]['_multigraph_category'][$plugin]);
+
+        foreach ($this->data['_group'][$this->group][$this->host]['_multigraph_category'][$plugin] as $category => $category_value) {
+            $subgraphs = [];
+            foreach ($category_value as $subgraph) {
+                $title = $subgraph;
+
+                $key = $subgraph . '.graph_title';
+                if (array_key_exists($category, $this->data['_group'][$this->group][$this->host]['_category']) &&
+                    array_key_exists($plugin, $this->data['_group'][$this->group][$this->host]['_category'][$category]) &&
+                    array_key_exists($key, $this->data['_group'][$this->group][$this->host]['_category'][$category][$plugin])
+                ) {
+                    $title = $this->data['_group'][$this->group][$this->host]['_category'][$category][$plugin][$key];
+                }
+
+                $subgraphs[$subgraph] = $title;
+            }
+
+            asort($subgraphs);
+
+            print "<h3 id=\"$category\">$category</h3>\n";
+            print "<table>\n";
+            foreach ($subgraphs as $subgraph => $title) {
+                print "<tr><td colspan=\"2\">$title</td></tr>\n";
+                print "<tr><td>";
+
+                $class = '';
+                if (array_key_exists($this->group, $this->host_problems) &&
+                    array_key_exists($this->host, $host_problems[$this->group]) &&
+                    array_key_exists('_multigraph', $host_problems[$this->group][$this->host]) &&
+                    array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host]['_multigraph']) &&
+                    array_key_exists($subgraph, $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin])
+                ) {
+                    if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$subgraph])) {
+                        $class = 'crit';
+                    } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$subgraph])) {
+                        $class = 'warn';
+                    } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$subgraph])) {
+                        $class = 'unkn';
+                    }
+                }
+                $i_class = 'i'. $class;
+
+                $attr = [];
+                if ($class) {
+                    $attr['class'] = $class;
+                }
+
+                $img  = $this->graph_baseurl;
+                $img .= '/'. $this->escape($this->group);
+                $img .= '/'. $this->escape($this->host);
+                $img .= '/'. $this->escape($plugin);
+                $img .= '/'. $this->escape($subgraph);
+                $img .= '-day.png';
+
+                $link = $this->qlink(
+                    'IMAGE',
+                    'munin/graph/show',
+                    [
+                      'group'    => $this->group,
+                      'host'     => $this->host,
+                      'plugin'   => $plugin,
+                      'subgraph' => $subgraph,
+                    ],
+                    $attr,
+                );
+
+                print str_replace(
+                    'IMAGE',
+                    "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                    $link,
+                );
+
+                print "</td><td>";
+
+                $img  = $this->graph_baseurl;
+                $img .= '/'. $this->escape($this->group);
+                $img .= '/'. $this->escape($this->host);
+                $img .= '/'. $this->escape($plugin);
+                $img .= '/'. $this->escape($subgraph);
+                $img .= '-week.png';
+
+                print str_replace(
+                    'IMAGE',
+                    "<img src=\"$img\" alt=\"$title\" class=\"$i_class\" />",
+                    $link,
+                );
+
+                print "</td></tr>\n";
+            }
+            print "</table>\n";
+        }
+    } elseif ($this->subgraph &&
+              array_key_exists('_group', $this->data) &&
+              array_key_exists($this->group, $this->data['_group']) &&
+              array_key_exists($this->host, $this->data['_group'][$this->group]) &&
+              array_key_exists('_plugin', $this->data['_group'][$this->group][$this->host]) &&
+              array_key_exists($this->plugin, $this->data['_group'][$this->group][$this->host]['_plugin']) &&
+              count($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]) > 0 &&
+              array_key_exists('_multigraph', $this->data['_group'][$this->group][$this->host]) &&
+              array_key_exists($plugin, $this->data['_group'][$this->group][$this->host]['_multigraph']) &&
+              in_array($this->subgraph, $this->data['_group'][$this->group][$this->host]['_multigraph'][$plugin])
+    ) {
+        $dynazoom_baseurl  = $this->munin_baseurl;
+        $dynazoom_baseurl .= '/static/dynazoom.html';
+        $dynazoom_baseurl .= '?cgiurl_graph='. $this->escape($this->cgiurl_graph);
+        $dynazoom_baseurl .= '&plugin_name='.  $this->escape($this->group);
+        $dynazoom_baseurl .= '/'.              $this->escape($this->host);
+        $dynazoom_baseurl .= '/'.              $this->escape($this->plugin);
+        $dynazoom_baseurl .= '/'.              $this->escape($this->subgraph);
+        $dynazoom_baseurl .= '&size_x=800';
+        $dynazoom_baseurl .= '&size_y=400';
+
+        print "<table>\n";
+
+        $i = 0;
+        foreach ($this->periods as $period) {
+            if ($i == 0) {
+                print "<tr>";
+            }
+
+            $url  = $dynazoom_baseurl;
+            $url .= '&start_epoch='.  (time() - (86400 * $this->period_days[$period]));
+            $url .= '&stop_epoch='.   time();
+
+            $class = '';
+            if (array_key_exists($this->group, $this->host_problems) &&
+                array_key_exists($this->host, $host_problems[$this->group]) &&
+                array_key_exists('_multigraph', $host_problems[$this->group][$this->host]) &&
+                array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host]['_multigraph']) &&
+                array_key_exists($this->subgraph, $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin])
+            ) {
+                if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$this->subgraph])) {
+                    $class = 'crit';
+                } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$this->subgraph])) {
+                    $class = 'warn';
+                } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$this->subgraph])) {
+                    $class = 'unkn';
+                }
+            }
+            $i_class = 'i'. $class;
+
+            $img  = $this->graph_baseurl;
+            $img .= '/'. $this->escape($this->group);
+            $img .= '/'. $this->escape($this->host);
+            $img .= '/'. $this->escape($this->plugin);
+            $img .= '/'. $this->escape($this->subgraph);
+            $img .= '-'. $this->escape($period) .'.png';
+
+            $alt  = $this->escape($this->periodicity[$period]);
+            $alt .= " graph";
+
+            print "<td>";
+            print "<a href=\"$url\"";
+            if ($class) {
+                print " class=\"$class\"";
+            }
+            print " target=\"_blank\">";
+            print "<img src=\"$img\" alt=\"$alt\" class=\"$i_class\" />";
+            print "</a>";
+            print "</td>";
+
+            $i++;
+
+            if ($i == 2) {
+                print "</tr>\n";
+
+                $i = 0;
+            }
+        }
+
+        print "</table>\n";
+
+        if (array_key_exists($this->subgraph.'.graph_info', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin])) {
+                print "<p/>\n";
+                print "<p class=\"graph_info\">";
+                print $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin][$this->subgraph.'.graph_info'];
+                print "</p>\n";
+        }
+
+        if (array_key_exists($this->group, $this->host_problems) &&
+            array_key_exists($this->host, $host_problems[$this->group]) &&
+            array_key_exists('_multigraph', $host_problems[$this->group][$this->host]) &&
+            array_key_exists($this->plugin, $this->host_problems[$this->group][$this->host]['_multigraph']) &&
+            array_key_exists($this->subgraph, $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin])
+        ) {
+            if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$this->subgraph])) {
+                print "<p/>\n";
+                print "<p>";
+                print "<strong>Note:</strong>";
+                print " This service is in CRITICAL state because one of the values reported is outside the allowed range.";
+                print " Please see further down for information about the ranges and the graph for the values.";
+                print "</p>\n";
+            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_multigraph'][$this->plugin][$this->subgraph])) {
+                print "<p/>\n";
+                print "<p>";
+                print "<strong>Note:</strong>";
+                print " This service is in WARNING state because one of the values reported is outside the allowed range.";
+                print " Please see further down for information about the ranges and the graph for the values.";
+                print "</p>\n";
+            }
+        }
+
+        print "<table id=\"legend\">\n";
+
+        $url  = $this->munin_baseurl ."/static/definitions.html#data_types";
+
+        print "<tr>";
+        print "<th class=\"field\">Field</th>";
+        print "<th class=\"internal\"><span title=\"For use in munin.conf\">Internal name</span></th>";
+        print "<th class=\"type\"><a href=\"$url\">Type</a></th>";
+        print "<th class=\"warn\">Warn</th>";
+        print "<th class=\"crit\">Crit</th>";
+        print "<th class=\"info\">Info</th>";
+        print "</tr>\n";
+
+        $datasources = [];
+
+        ksort($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin]);
+
+        foreach ($this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin] as $key => $value) {
+            if (preg_match('/^'.$this->subgraph.'\.(\S+?)\.(critical|graph|info|label|type|warning)$/', $key, $matches)) {
+                if (!array_key_exists($matches[1], $datasources)) {
+                    $datasources[$matches[1]] = [];
+                }
+
+                $datasources[$matches[1]][$matches[2]] = $value;
+            }
+        }
+
+        ksort($datasources);
+
+        $order = array_keys($datasources);
+        if (array_key_exists($this->subgraph.'.graph_order', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin])) {
+            $order = explode(' ', $this->data['_group'][$this->group][$this->host]['_plugin'][$this->plugin][$this->subgraph.'.graph_order']);
+        }
+
+        $i = 1;
+        foreach ($order as $datasource) {
+            $datasource_value = $datasources[$datasource];
+
+            $graph = 'yes';
+            if (array_key_exists('graph', $datasource_value)) {
+                $graph = $datasource_value['graph'];
+            }
+
+            if ($graph == 'no') {
+                continue;
+            }
+
+            $label = $datasource;
+            if (array_key_exists('label', $datasource_value)) {
+                $label = $datasource_value['label'];
+            }
+
+            $type = 'gauge';
+            if (array_key_exists('type', $datasource_value)) {
+                $type = $datasource_value['type'];
+            }
+
+            $warning = '&nbsp;';
+            if (array_key_exists('warning', $datasource_value)) {
+                $warning = $datasource_value['warning'];
+            }
+
+            $critical = '&nbsp;';
+            if (array_key_exists('critical', $datasource_value)) {
+                $critical = $datasource_value['critical'];
+            }
+
+            $info = '&nbsp;';
+            if (array_key_exists('info', $datasource_value)) {
+                $info = $datasource_value['info'];
+            }
+
+            $class = 'oddrow';
+            if ($i == 2) {
+                $class = 'evenrow';
+            }
+
+            $key   = $this->plugin.';'.$this->subgraph;
+            $state = 'ok';
+            if (array_key_exists('_group', $this->limits) &&
+                array_key_exists($this->group, $this->limits['_group']) &&
+                array_key_exists($this->host, $this->limits['_group'][$this->group]) &&
+                array_key_exists($key, $this->limits['_group'][$this->group][$this->host]) &&
+                array_key_exists($datasource, $this->limits['_group'][$this->group][$this->host][$key]) &&
+                array_key_exists('state', $this->limits['_group'][$this->group][$this->host][$key][$datasource]) &&
+                count($this->limits['_group'][$this->group][$this->host][$key][$datasource]) > 0
+            ) {
+                $state = $this->limits['_group'][$this->group][$this->host][$key][$datasource]['state'];
+            }
+
+            print "<tr class=\"$class\">";
+            print "<td class=\"field\">$label</td>";
+            print "<td class=\"internal\"><span title=\"For use in munin.conf\">$datasource</span></td>";
+            print "<td class=\"type\">$type</td>";
+            print "<td class=\"warn\">";
+            if ($state == 'warning') {
+                print "<div class=\"warntext\">$warning</div>";
+            } else {
+                print "$warning";
+            }
+            print "</td>";
+            print "<td class=\"crit\">";
+            if ($state == 'critical') {
+                print "<div class=\"crittext\">$critical</div>";
+            } else {
+                print "$critical";
+            }
+            print "</td>";
+            print "<td class=\"info\">$info</td>";
+            print "</tr>\n";
+
+            $i++;
+
+            if ($i > 2) {
+                $i = 1;
+            }
+        }
+
+        print "</table>\n";
     }
 } elseif ($this->group && $this->host) {
     if (array_key_exists('_group', $this->data) &&
@@ -881,13 +1392,14 @@ if (basename($url['path']) == 'custom' &&
                 $class = '';
                 if (array_key_exists($this->group, $this->host_problems) &&
                     array_key_exists($this->host, $this->host_problems[$this->group]) &&
-                    array_key_exists($plugin, $this->host_problems[$this->group][$this->host])
+                    array_key_exists('_plugin', $this->host_problems[$this->group][$this->host]) &&
+                    array_key_exists($plugin, $this->host_problems[$this->group][$this->host]['_plugin'])
                 ) {
-                    if (array_key_exists('critical', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    if (array_key_exists('critical', $this->host_problems[$this->group][$this->host]['_plugin'][$plugin])) {
                         $class = 'crit';
-                    } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    } elseif (array_key_exists('warning', $this->host_problems[$this->group][$this->host]['_plugin'][$plugin])) {
                         $class = 'warn';
-                    } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host][$plugin])) {
+                    } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$this->host]['_plugin'][$plugin])) {
                         $class = 'unkn';
                     }
                 }
@@ -1013,13 +1525,14 @@ if (basename($url['path']) == 'custom' &&
                         $class = '';
                         if (array_key_exists($this->group, $this->host_problems) &&
                             array_key_exists($host, $this->host_problems[$this->group]) &&
-                            array_key_exists($plugin, $this->host_problems[$this->group][$host])
+                            array_key_exists('_plugin', $this->host_problems[$this->group][$host]) &&
+                            array_key_exists($plugin, $this->host_problems[$this->group][$host]['_plugin'])
                         ) {
-                            if (array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
+                            if (array_key_exists('critical', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                                 $class = 'crit';
-                            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
+                            } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                                 $class = 'warn';
-                            } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
+                            } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                                 $class = 'unkn';
                             }
                         }
@@ -1128,13 +1641,14 @@ if (basename($url['path']) == 'custom' &&
                     $attrs = [];
                     if (array_key_exists($this->group, $this->host_problems) &&
                         array_key_exists($host, $this->host_problems[$this->group]) &&
-                        array_key_exists($plugin, $this->host_problems[$this->group][$host])
+                        array_key_exists('_plugin', $this->host_problems[$this->group][$host]) &&
+                        array_key_exists($plugin, $this->host_problems[$this->group][$host]['_plugin'])
                     ) {
-                        if (array_key_exists('critical', $this->host_problems[$this->group][$host][$plugin])) {
+                        if (array_key_exists('critical', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                             $attrs['class'] = 'crit';
-                        } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host][$plugin])) {
+                        } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                             $attrs['class'] = 'warn';
-                        } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host][$plugin])) {
+                        } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host]['_plugin'][$plugin])) {
                             $attrs['class'] = 'unkn';
                         }
                     }
@@ -1156,6 +1670,94 @@ if (basename($url['path']) == 'custom' &&
                 print "        </li>\n";
             }
             print "      </ul>\n";
+            if (array_key_exists('_multigraph_category', $host_value)) {
+                ksort($host_value['_multigraph_category']);
+
+                print "      <ul>\n";
+                foreach ($host_value['_multigraph_category'] as $plugin => $plugin_value) {
+                    print "        <li>\n";
+                    print $this->qlink(
+                        $this->escape($plugin),
+                        'munin/graph/show',
+                        [
+                          'group'  => $this->group,
+                          'host'   => $host,
+                          'plugin' => $plugin,
+                        ]
+                    );
+
+                    ksort($plugin_value);
+
+                    print "          <ul>\n";
+                    foreach ($plugin_value as $category => $category_value) {
+                        print "            <li>\n";
+                        print $this->qlink(
+                            $this->escape($category),
+                            'munin/graph/show#'.$this->escape($category),
+                            [
+                              'group'  => $this->group,
+                              'host'   => $host,
+                              'plugin' => $plugin,
+                            ]
+                        );
+
+                        $subgraphs = [];
+                        foreach ($category_value as $subgraph) {
+                            $title = $subgraph;
+
+                            $key = $subgraph . '.graph_title';
+                            if (array_key_exists($category, $host_value['_category']) &&
+                                array_key_exists($plugin, $host_value['_category'][$category]) &&
+                                array_key_exists($key, $host_value['_category'][$category][$plugin])
+                            ) {
+                                $title = $host_value['_category'][$category][$plugin][$key];
+                            }
+
+                            $subgraphs[$subgraph] = $title;
+                        }
+
+                        asort($subgraphs);
+
+                        print "              <ul>\n";
+                        foreach ($subgraphs as $subgraph => $title) {
+                            $attrs = [];
+                            if (array_key_exists($this->group, $this->host_problems) &&
+                                array_key_exists($host, $this->host_problems[$this->group]) &&
+                                array_key_exists('_multigraph', $this->host_problems[$this->group][$host]) &&
+                                array_key_exists($plugin, $this->host_problems[$this->group][$host]['_multigraph']) &&
+                                array_key_exists($subgraph, $this->host_problems[$this->group][$host]['_multigraph'][$plugin])
+                            ) {
+                                if (array_key_exists('critical', $this->host_problems[$this->group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                    $attrs['class'] = 'crit';
+                                } elseif (array_key_exists('warning', $this->host_problems[$this->group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                    $attrs['class'] = 'warn';
+                                } elseif (array_key_exists('unknown', $this->host_problems[$this->group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                    $attrs['class'] = 'unkn';
+                                }
+                            }
+
+                            print "                <li>\n";
+                            print $this->qlink(
+                                $this->escape($title),
+                                'munin/graph/show',
+                                [
+                                  'group'    => $this->group,
+                                  'host'     => $host,
+                                  'plugin'   => $plugin,
+                                  'subgraph' => $subgraph,
+                                ],
+                                $attrs
+                            );
+                            print "                </li>\n";
+                        }
+                        print "              </ul>\n";
+                        print "            </li>\n";
+                    }
+                    print "          </ul>\n";
+                    print "        </li>\n";
+                }
+                print "      </ul>\n";
+            }
             print "</li>\n";
         }
         print "  </ul>\n";
@@ -1254,9 +1856,19 @@ if ($this->debug) {
     var_dump($this->limits);
     print "</pre>";
 
+    print "Host Problems:\n";
+    print "<pre>";
+    var_dump($this->host_problems);
+    print "</pre>";
+
     print "Category Problems:\n";
     print "<pre>";
     var_dump($this->category_problems);
+    print "</pre>";
+
+    print "Group Category Problems:\n";
+    print "<pre>";
+    var_dump($this->group_category_problems);
     print "</pre>";
 
     print "Custom Pages:\n";

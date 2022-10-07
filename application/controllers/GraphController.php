@@ -18,6 +18,7 @@ class GraphController extends Controller
         $group    = $this->params->get('group');
         $host     = $this->params->get('host');
         $plugin   = $this->params->get('plugin');
+        $subgraph = $this->params->get('subgraph');
 
         $category = $this->params->get('category');
         $period   = $this->params->get('period');
@@ -27,6 +28,7 @@ class GraphController extends Controller
         $this->view->group    = $group;
         $this->view->host     = $host;
         $this->view->plugin   = $plugin;
+        $this->view->subgraph = $subgraph;
 
         $this->view->category = $category;
         $this->view->period   = $period;
@@ -97,6 +99,9 @@ class GraphController extends Controller
         $category_problems = Limits::getCategoryProblems($limits, $data);
         $this->view->category_problems = $category_problems;
 
+        $group_category_problems = Limits::getGroupCategoryProblems($limits, $data);
+        $this->view->group_category_problems = $group_category_problems;
+
 
         $periods = Periods::getPeriods();
         $this->view->periods = $periods;
@@ -124,6 +129,14 @@ class GraphController extends Controller
                     array_key_exists($plugin, $data['_group'][$group][$host]['_plugin'])
                 ) {
                     $title = "$plugin :: $title";
+
+                    if ($subgraph &&
+                        array_key_exists('_multigraph', $data['_group'][$group][$host]) &&
+                        array_key_exists($plugin, $data['_group'][$group][$host]['_multigraph']) &&
+                        in_array($subgraph, $data['_group'][$group][$host]['_multigraph'][$plugin])
+                    ) {
+                        $title = "$subgraph :: $title";
+                    }
                 }
             }
         } elseif ($category &&

@@ -53,6 +53,54 @@ class Datafile
 
                                         $data['_group'][$group][$host]['_category'][$category][$plugin] = $data['_group'][$group][$host]['_plugin'][$plugin];
                                     }
+
+                                    ksort($plugin_value);
+
+                                    foreach ($plugin_value as $key => $value) {
+                                        $parts = preg_split('/\./', $key);
+
+                                        # graph_title attribute is required
+                                        if ($parts[count($parts)-1] == 'graph_title' &&
+                                            count($parts) >= 2
+                                        ) {
+                                            # [<subgraph>.]<subgraph>.<global_attribute>
+
+                                            array_pop($parts);
+
+                                            $subgraph = implode('.', $parts);
+
+                                            if (!array_key_exists('_multigraph', $data['_group'][$group][$host]) ||
+                                                !array_key_exists($plugin, $data['_group'][$group][$host]['_multigraph'])
+                                            ) {
+                                                $data['_group'][$group][$host]['_multigraph'][$plugin] = [];
+                                            }
+
+                                            array_push($data['_group'][$group][$host]['_multigraph'][$plugin], $subgraph);
+                                        }
+                                    }
+
+                                    if (array_key_exists('_multigraph', $data['_group'][$group][$host]) &&
+                                        array_key_exists($plugin, $data['_group'][$group][$host]['_multigraph'])
+                                    ) {
+                                        foreach ($data['_group'][$group][$host]['_multigraph'][$plugin] as $subgraph) {
+                                            $category = 'other';
+
+                                            $key = $subgraph . '.graph_category';
+
+                                            if (array_key_exists($key, $data['_group'][$group][$host]['_plugin'][$plugin])) {
+                                                $category = mb_strtolower($data['_group'][$group][$host]['_plugin'][$plugin][$key]);
+                                            }
+
+                                            if (!array_key_exists('_multigraph_category', $data['_group'][$group][$host]) ||
+                                                !array_key_exists($plugin, $data['_group'][$group][$host]['_multigraph_category']) ||
+                                                !array_key_exists($category, $data['_group'][$group][$host]['_multigraph_category'][$plugin])
+                                            ) {
+                                                $data['_group'][$group][$host]['_multigraph_category'][$plugin][$category] = [];
+                                            }
+
+                                            array_push($data['_group'][$group][$host]['_multigraph_category'][$plugin][$category], $subgraph);
+                                        }
+                                    }
                                 }
                             }
                         }

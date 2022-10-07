@@ -24,8 +24,9 @@ class Limits
                         $value = $matches[2];
 
                         $limits[$key] = $value;
-                    } elseif (preg_match('/^(\S+?);(\S+);(\S+?);(\S+);(\S+) (\S+.*?)\s*$/', $line, $matches)) {
+                    } elseif (preg_match('/^(\S+?);(\S+?);(\S+);(\S+?);(\S+?) (\S+.*?)\s*$/', $line, $matches)) {
                         # linuxminded.xs4all.nl;anubis.linuxminded.xs4all.nl;smart_sda;Offline_Uncorrectable;ok OK
+                        # linuxminded.xs4all.nl;vmware-debian-unstable.linuxminded.xs4all.nl;test_multi;test1;test;state ok
 
                         $group      = $matches[1];
                         $host       = $matches[2];
@@ -185,6 +186,10 @@ class Limits
                             if (array_key_exists('state', $datasource_value)) {
                                 $state = $datasource_value['state'];
 
+                                $parts    = preg_split('/;/', $plugin);
+                                $plugin   = array_shift($parts);
+                                $subgraph = implode('.', $parts);
+
                                 if ($state == 'ok') {
                                     continue;
                                 } elseif (array_key_exists('_group', $data) &&
@@ -192,8 +197,15 @@ class Limits
                                           array_key_exists($host, $data['_group'][$group]) &&
                                           array_key_exists('_plugin', $data['_group'][$group][$host]) &&
                                           array_key_exists($plugin, $data['_group'][$group][$host]['_plugin']) &&
-                                          array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
-                                          $data['_group'][$group][$host]['_plugin'][$plugin][$datasource.'.graph'] == 'no'
+                                          (
+                                            (
+                                              array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$datasource.'.graph'] == 'no'
+                                            ) || (
+                                              array_key_exists($subgraph.'.'.$datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$subgraph.'.'.$datasource.'.graph'] == 'no'
+                                            )
+                                          )
                                 ) {
                                     continue;
                                 }
@@ -204,14 +216,35 @@ class Limits
                                 if (!array_key_exists($host, $host_problems[$group])) {
                                     $host_problems[$group][$host] = [];
                                 }
-                                if (!array_key_exists($plugin, $host_problems[$group][$host])) {
-                                    $host_problems[$group][$host][$plugin] = [];
-                                }
-                                if (!array_key_exists($state, $host_problems[$group][$host][$plugin])) {
-                                    $host_problems[$group][$host][$plugin][$state] = [];
-                                }
-                                if (!array_key_exists($datasource, $host_problems[$group][$host][$plugin][$state])) {
-                                    $host_problems[$group][$host][$plugin][$state][$datasource] = $datasource_value;
+                                if ($subgraph != '') {
+                                    if (!array_key_exists('_multigraph', $host_problems[$group][$host])) {
+                                        $host_problems[$group][$host]['_multigraph'] = [];
+                                    }
+                                    if (!array_key_exists($plugin, $host_problems[$group][$host]['_multigraph'])) {
+                                        $host_problems[$group][$host]['_multigraph'][$plugin] = [];
+                                    }
+                                    if (!array_key_exists($subgraph, $host_problems[$group][$host]['_multigraph'][$plugin])) {
+                                        $host_problems[$group][$host]['_multigraph'][$plugin][$subgraph] = [];
+                                    }
+                                    if (!array_key_exists($state, $host_problems[$group][$host]['_multigraph'][$plugin][$subgraph])) {
+                                        $host_problems[$group][$host]['_multigraph'][$plugin][$subgraph][$state] = [];
+                                    }
+                                    if (!array_key_exists($datasource, $host_problems[$group][$host]['_multigraph'][$plugin][$subgraph][$state])) {
+                                        $host_problems[$group][$host]['_multigraph'][$plugin][$subgraph][$state][$datasource] = $datasource_value;
+                                    }
+                                } else {
+                                    if (!array_key_exists('_plugin', $host_problems[$group][$host])) {
+                                        $host_problems[$group][$host]['_plugin'] = [];
+                                    }
+                                    if (!array_key_exists($plugin, $host_problems[$group][$host]['_plugin'])) {
+                                        $host_problems[$group][$host]['_plugin'][$plugin] = [];
+                                    }
+                                    if (!array_key_exists($state, $host_problems[$group][$host]['_plugin'][$plugin])) {
+                                        $host_problems[$group][$host]['_plugin'][$plugin][$state] = [];
+                                    }
+                                    if (!array_key_exists($datasource, $host_problems[$group][$host]['_plugin'][$plugin][$state])) {
+                                        $host_problems[$group][$host]['_plugin'][$plugin][$state][$datasource] = $datasource_value;
+                                    }
                                 }
                             }
                         }
@@ -237,6 +270,10 @@ class Limits
                             if (array_key_exists('state', $datasource_value)) {
                                 $state = $datasource_value['state'];
 
+                                $parts    = preg_split('/;/', $plugin);
+                                $plugin   = array_shift($parts);
+                                $subgraph = implode('.', $parts);
+
                                 if ($state == 'ok') {
                                     continue;
                                 } elseif (array_key_exists('_group', $data) &&
@@ -245,7 +282,15 @@ class Limits
                                           array_key_exists('_plugin', $data['_group'][$group][$host]) &&
                                           array_key_exists($plugin, $data['_group'][$group][$host]['_plugin']) &&
                                           array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
-                                          $data['_group'][$group][$host]['_plugin'][$plugin][$datasource.'.graph'] == 'no'
+                                          (
+                                            (
+                                              array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$datasource.'.graph'] == 'no'
+                                            ) || (
+                                              array_key_exists($subgraph.'.'.$datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$subgraph.'.'.$datasource.'.graph'] == 'no'
+                                            )
+                                          )
                                 ) {
                                     continue;
                                 }
@@ -257,9 +302,14 @@ class Limits
                                     array_key_exists($plugin, $data['_group'][$group][$host]['_plugin']) &&
                                     count($data['_group'][$group][$host]['_plugin']) > 0
                                 ) {
+                                    $key = 'graph_category';
+                                    if ($subgraph != '') {
+                                        $key = $subgraph.'.graph_category';
+                                    }
+
                                     $category = 'other';
-                                    if (array_key_exists('graph_category', $data['_group'][$group][$host]['_plugin'][$plugin])) {
-                                        $category = mb_strtolower($data['_group'][$group][$host]['_plugin'][$plugin]['graph_category']);
+                                    if (array_key_exists($key, $data['_group'][$group][$host]['_plugin'][$plugin])) {
+                                        $category = mb_strtolower($data['_group'][$group][$host]['_plugin'][$plugin][$key]);
                                     }
 
                                     if (!array_key_exists($group, $category_problems)) {
@@ -274,11 +324,29 @@ class Limits
                                     if (!array_key_exists($state, $category_problems[$group][$host][$category])) {
                                         $category_problems[$group][$host][$category][$state] = [];
                                     }
-                                    if (!array_key_exists($plugin, $category_problems[$group][$host][$category][$state])) {
-                                        $category_problems[$group][$host][$category][$state][$plugin] = [];
-                                    }
-                                    if (!array_key_exists($datasource, $category_problems[$group][$host][$category][$state][$plugin])) {
-                                        $category_problems[$group][$host][$category][$state][$plugin][$datasource] = $datasource_value;
+                                    if ($subgraph != '') {
+                                        if (!array_key_exists('_multigraph', $category_problems[$group][$host][$category][$state])) {
+                                            $category_problems[$group][$host][$category][$state]['_multigraph'] = [];
+                                        }
+                                        if (!array_key_exists($plugin, $category_problems[$group][$host][$category][$state]['_multigraph'])) {
+                                            $category_problems[$group][$host][$category][$state]['_multigraph'][$plugin] = [];
+                                        }
+                                        if (!array_key_exists($subgraph, $category_problems[$group][$host][$category][$state]['_multigraph'][$plugin])) {
+                                            $category_problems[$group][$host][$category][$state]['_multigraph'][$plugin][$subgraph] = [];
+                                        }
+                                        if (!array_key_exists($datasource, $category_problems[$group][$host][$category][$state]['_multigraph'][$plugin][$subgraph])) {
+                                            $category_problems[$group][$host][$category][$state]['_multigraph'][$plugin][$subgraph][$datasource] = $datasource_value;
+                                        }
+                                    } else {
+                                        if (!array_key_exists('_plugin', $category_problems[$group][$host][$category][$state])) {
+                                            $category_problems[$group][$host][$category][$state]['_plugin'] = [];
+                                        }
+                                        if (!array_key_exists($plugin, $category_problems[$group][$host][$category][$state]['_plugin'])) {
+                                            $category_problems[$group][$host][$category][$state]['_plugin'][$plugin] = [];
+                                        }
+                                        if (!array_key_exists($datasource, $category_problems[$group][$host][$category][$state]['_plugin'][$plugin])) {
+                                            $category_problems[$group][$host][$category][$state]['_plugin'][$plugin][$datasource] = $datasource_value;
+                                        }
                                     }
                                 }
                             }
@@ -289,5 +357,108 @@ class Limits
         }
 
         return $category_problems;
+    }
+
+    public static function getGroupCategoryProblems($limits, $data)
+    {
+        $group_category_problems = [];
+
+        if (array_key_exists('_group', $limits) &&
+            count($limits['_group']) > 0
+        ) {
+            foreach ($limits['_group'] as $group => $group_value) {
+                foreach ($group_value as $host => $host_value) {
+                    foreach ($host_value as $plugin => $plugin_value) {
+                        foreach ($plugin_value as $datasource => $datasource_value) {
+                            if (array_key_exists('state', $datasource_value)) {
+                                $state = $datasource_value['state'];
+
+                                $parts    = preg_split('/;/', $plugin);
+                                $plugin   = array_shift($parts);
+                                $subgraph = implode('.', $parts);
+
+                                if ($state == 'ok') {
+                                    continue;
+                                } elseif (array_key_exists('_group', $data) &&
+                                          array_key_exists($group, $data['_group']) &&
+                                          array_key_exists($host, $data['_group'][$group]) &&
+                                          array_key_exists('_plugin', $data['_group'][$group][$host]) &&
+                                          array_key_exists($plugin, $data['_group'][$group][$host]['_plugin']) &&
+                                          array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                          (
+                                            (
+                                              array_key_exists($datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$datasource.'.graph'] == 'no'
+                                            ) || (
+                                              array_key_exists($subgraph.'.'.$datasource.'.graph', $data['_group'][$group][$host]['_plugin'][$plugin]) &&
+                                              $data['_group'][$group][$host]['_plugin'][$plugin][$subgraph.'.'.$datasource.'.graph'] == 'no'
+                                            )
+                                          )
+                                ) {
+                                    continue;
+                                }
+
+                                if (array_key_exists('_group', $data) &&
+                                    array_key_exists($group, $data['_group']) &&
+                                    array_key_exists($host, $data['_group'][$group]) &&
+                                    array_key_exists('_plugin', $data['_group'][$group][$host]) &&
+                                    array_key_exists($plugin, $data['_group'][$group][$host]['_plugin']) &&
+                                    count($data['_group'][$group][$host]['_plugin']) > 0
+                                ) {
+                                    $key = 'graph_category';
+                                    if ($subgraph != '') {
+                                        $key = $subgraph.'.graph_category';
+                                    }
+
+                                    $category = 'other';
+                                    if (array_key_exists($key, $data['_group'][$group][$host]['_plugin'][$plugin])) {
+                                        $category = mb_strtolower($data['_group'][$group][$host]['_plugin'][$plugin][$key]);
+                                    }
+
+                                    if (!array_key_exists($group, $group_category_problems)) {
+                                        $group_category_problems[$group] = [];
+                                    }
+                                    if (!array_key_exists($category, $group_category_problems[$group])) {
+                                        $group_category_problems[$group][$category] = [];
+                                    }
+                                    if (!array_key_exists($state, $group_category_problems[$group][$category])) {
+                                        $group_category_problems[$group][$category][$state] = [];
+                                    }
+                                    if (!array_key_exists($host, $group_category_problems[$group][$category][$state])) {
+                                        $group_category_problems[$group][$category][$state][$host] = [];
+                                    }
+                                    if ($subgraph != '') {
+                                        if (!array_key_exists('_multigraph', $group_category_problems[$group][$category][$state][$host])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_multigraph'] = [];
+                                        }
+                                        if (!array_key_exists($plugin, $group_category_problems[$group][$category][$state][$host]['_multigraph'])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_multigraph'][$plugin] = [];
+                                        }
+                                        if (!array_key_exists($subgraph, $group_category_problems[$group][$category][$state][$host]['_multigraph'][$plugin])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_multigraph'][$plugin][$subgraph] = [];
+                                        }
+                                        if (!array_key_exists($datasource, $group_category_problems[$group][$category][$state][$host]['_multigraph'][$plugin][$subgraph])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_multigraph'][$plugin][$subgraph][$datasource] = $datasource_value;
+                                        }
+                                    } else {
+                                        if (!array_key_exists('_plugin', $group_category_problems[$group][$category][$state][$host])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_plugin'] = [];
+                                        }
+                                        if (!array_key_exists($plugin, $group_category_problems[$group][$category][$state][$host]['_plugin'])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_plugin'][$plugin] = [];
+                                        }
+                                        if (!array_key_exists($datasource, $group_category_problems[$group][$category][$state][$host]['_plugin'][$plugin])) {
+                                            $group_category_problems[$group][$category][$state][$host]['_plugin'][$plugin][$datasource] = $datasource_value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $group_category_problems;
     }
 }
