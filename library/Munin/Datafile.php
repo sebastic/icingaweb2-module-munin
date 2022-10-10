@@ -48,6 +48,11 @@ class Datafile
                         foreach ($group_value as $host => $host_value) {
                             foreach ($host_value as $_plugin => $_plugin_value) {
                                 foreach ($_plugin_value as $plugin => $plugin_value) {
+                                    if (!array_key_exists('graph_title', $plugin_value)) {
+                                        unset($data['_group'][$group][$host]['_plugin'][$plugin]);
+                                        continue;
+                                    }
+
                                     if (array_key_exists('graph_category', $plugin_value)) {
                                         $category = mb_strtolower($plugin_value['graph_category']);
 
